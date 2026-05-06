@@ -1,0 +1,9 @@
+package com.example.springbestpractice.infrastructure.user;
+
+import com.example.springbestpractice.domain.user.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    boolean existsByEmail(String email);
+}
