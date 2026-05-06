@@ -1,6 +1,7 @@
 package com.example.springbestpractice.application.user;
 
 import com.example.springbestpractice.api.user.dto.UserCreateRequest;
+import com.example.springbestpractice.api.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.api.user.dto.UserResponse;
 import com.example.springbestpractice.api.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.domain.user.User;
@@ -25,7 +26,7 @@ public class UserService {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException(request.email());
         }
-        User user = User.create(request.email(), request.nickname());
+        User user = User.create(request.email(), request.nickname(), request.password());
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -47,6 +48,13 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(id));
         user.updateNickname(request.nickname());
         return UserResponse.from(user);
+    }
+
+    @Transactional
+    public void updatePassword(Long id, UserPasswordUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        user.updatePassword(request.password());
     }
 
     @Transactional

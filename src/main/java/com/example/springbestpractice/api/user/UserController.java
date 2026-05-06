@@ -1,6 +1,7 @@
 package com.example.springbestpractice.api.user;
 
 import com.example.springbestpractice.api.user.dto.UserCreateRequest;
+import com.example.springbestpractice.api.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.api.user.dto.UserResponse;
 import com.example.springbestpractice.api.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.application.user.UserService;
@@ -36,6 +37,12 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponse updateUser(@PathVariable Long id, @RequestBody UserUpdateRequest request) {
         return userService.updateUser(id, request);
+    }
+
+    @PatchMapping("/{id}/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updatePassword(@PathVariable Long id, @RequestBody UserPasswordUpdateRequest request) {
+        userService.updatePassword(id, request);
     }
 
     @DeleteMapping("/{id}")

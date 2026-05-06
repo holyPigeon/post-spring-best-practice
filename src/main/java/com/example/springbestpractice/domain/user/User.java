@@ -27,6 +27,9 @@ public class User {
     @Column(nullable = false)
     private String nickname;
 
+    @Column(nullable = false)
+    private String password;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -34,16 +37,21 @@ public class User {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private User(String email, String nickname) {
+    private User(String email, String nickname, String password) {
         this.email = email;
         this.nickname = nickname;
+        this.password = password;
     }
 
-    public static User create(String email, String nickname) {
-        return new User(email, nickname);
+    public static User create(String email, String nickname, String password) {
+        return new User(email, nickname, password);
     }
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
     }
 }
