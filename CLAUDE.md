@@ -8,23 +8,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |---|---|
 | 코딩 스타일 | `.claude/coding-style.md` |
 | 커밋 컨벤션 | `.claude/commit-convention.md` |
+| 테스트 스타일 | `.claude/testing-style.md` |
 
 ---
 
+## Java 환경 (필수)
+
+시스템 기본 JVM이 Java 8로 잡혀 있어 Gradle 실행 시 실패한다. **모든 Gradle 명령 전에 반드시 JAVA_HOME을 Zulu 21로 지정해야 한다.**
+
+```powershell
+$env:JAVA_HOME = "C:\Zulu\zulu-21"
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+```
+
+한 줄로 Gradle 명령과 함께 실행:
+
+```powershell
+$env:JAVA_HOME = "C:\Zulu\zulu-21"; $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"; .\gradlew <task>
+```
+
 ## Build & Run
 
-```bash
-./gradlew build          # Compile and package
-./gradlew bootRun        # Start the application
-./gradlew clean build    # Full clean rebuild
+```powershell
+$env:JAVA_HOME = "C:\Zulu\zulu-21"; $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"; .\gradlew build
+$env:JAVA_HOME = "C:\Zulu\zulu-21"; $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"; .\gradlew bootRun
+$env:JAVA_HOME = "C:\Zulu\zulu-21"; $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"; .\gradlew clean build
 ```
 
 ## Testing
 
-```bash
-./gradlew test                                    # Run all tests
-./gradlew test --tests "FullyQualifiedClassName"  # Run a single test class
-./gradlew test --tests "ClassName.methodName"     # Run a single test method
+```powershell
+$env:JAVA_HOME = "C:\Zulu\zulu-21"; $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"; .\gradlew test
+$env:JAVA_HOME = "C:\Zulu\zulu-21"; $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"; .\gradlew test --tests "FullyQualifiedClassName"
+$env:JAVA_HOME = "C:\Zulu\zulu-21"; $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"; .\gradlew test --tests "ClassName.methodName"
 ```
 
 Test slices: `@WebMvcTest` (controller), `@DataJpaTest` (repository)
