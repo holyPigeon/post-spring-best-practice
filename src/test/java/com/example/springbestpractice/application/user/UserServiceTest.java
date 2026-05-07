@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,9 @@ class UserServiceTest {
 
     @Mock
     UserRepository userRepository;
+
+    @Mock
+    PasswordEncoder passwordEncoder;
 
     @InjectMocks
     UserService userService;
@@ -71,6 +75,7 @@ class UserServiceTest {
             // given
             UserCreateRequest request = new UserCreateRequest("test@test.com", "테스터", "password");
             given(userRepository.existsByEmail("test@test.com")).willReturn(false);
+            given(passwordEncoder.encode("password")).willReturn("encoded-password");
             given(userRepository.save(any(User.class))).willReturn(user);
 
             // when
@@ -197,17 +202,19 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("존재하는 ID면 비밀번호를 변경한다")
+        @DisplayName("존재하는 ID면 비밀번호를 인코딩하여 변경한다")
         void updatePassword() {
             // given
             UserPasswordUpdateRequest request = new UserPasswordUpdateRequest("newpassword");
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
+            given(passwordEncoder.encode("newpassword")).willReturn("encoded-newpassword");
 
             // when
             userService.updatePassword(1L, request);
 
             // then
-            assertThat(user.getPassword()).isEqualTo("newpassword");
+            verify(passwordEncoder).encode("newpassword");
+            assertThat(user.getPassword()).isEqualTo("encoded-newpassword");
         }
     }
 
