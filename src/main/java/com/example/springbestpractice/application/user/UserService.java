@@ -9,6 +9,7 @@ import com.example.springbestpractice.domain.user.DuplicateEmailException;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
 import com.example.springbestpractice.infrastructure.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +21,14 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException(request.email());
         }
-        User user = User.create(request.email(), request.nickname(), request.password());
+        User user = User.create(request.email(), request.nickname(), passwordEncoder.encode(request.password()));
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -54,7 +56,7 @@ public class UserService {
     public void updatePassword(Long id, UserPasswordUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        user.updatePassword(request.password());
+        user.updatePassword(passwordEncoder.encode(request.password()));
     }
 
     @Transactional
