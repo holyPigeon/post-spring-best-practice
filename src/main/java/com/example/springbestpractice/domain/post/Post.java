@@ -1,9 +1,7 @@
 package com.example.springbestpractice.domain.post;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -12,7 +10,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
 public class Post {
 
@@ -36,14 +36,12 @@ public class Post {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private Post(String title, String content, String author) {
-        this.title = title;
-        this.content = content;
-        this.author = author;
-    }
-
     public static Post create(String title, String content, String author) {
-        return new Post(title, content, author);
+        return Post.builder()
+                .title(title)
+                .content(content)
+                .author(author)
+                .build();
     }
 
     public void update(String title, String content) {

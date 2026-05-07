@@ -1,9 +1,7 @@
 package com.example.springbestpractice.domain.user;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -13,7 +11,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
 public class User {
 
@@ -37,14 +37,12 @@ public class User {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private User(String email, String nickname, String password) {
-        this.email = email;
-        this.nickname = nickname;
-        this.password = password;
-    }
-
     public static User create(String email, String nickname, String password) {
-        return new User(email, nickname, password);
+        return User.builder()
+                .email(email)
+                .nickname(nickname)
+                .password(password)
+                .build();
     }
 
     public void updateNickname(String nickname) {
