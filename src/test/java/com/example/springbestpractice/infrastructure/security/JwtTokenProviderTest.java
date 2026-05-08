@@ -12,24 +12,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 class JwtTokenProviderTest {
 
     private static final String SECRET = "spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that";
-    private static final long EXPIRATION = 86400000L;
+    private static final long ACCESS_EXPIRATION = 1800000L;
+    private static final long REFRESH_EXPIRATION = 604800000L;
 
     JwtTokenProvider jwtTokenProvider;
 
     @BeforeEach
     void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(SECRET, EXPIRATION);
+        jwtTokenProvider = new JwtTokenProvider(SECRET, ACCESS_EXPIRATION, REFRESH_EXPIRATION);
     }
 
     @Nested
-    @DisplayName("토큰 생성")
-    class CreateToken {
+    @DisplayName("액세스 토큰 생성")
+    class CreateAccessToken {
 
         @Test
         @DisplayName("userId와 email로 JWT를 생성하고 claims를 확인한다")
         void createTokenWithClaims() {
             // when
-            String token = jwtTokenProvider.createToken(1L, "test@test.com");
+            String token = jwtTokenProvider.createAccessToken(1L, "test@test.com");
 
             // then
             assertThat(token).isNotNull().isNotBlank();
@@ -47,10 +48,21 @@ class JwtTokenProviderTest {
         @DisplayName("유효한 토큰이면 true를 반환한다")
         void returnTrueForValidToken() {
             // given
-            String token = jwtTokenProvider.createToken(1L, "test@test.com");
+            String token = jwtTokenProvider.createAccessToken(1L, "test@test.com");
 
             // when & then
             assertThat(jwtTokenProvider.isValid(token)).isTrue();
+        }
+
+        @Test
+        @DisplayName("만료된 토큰이면 false를 반환한다")
+        void returnFalseForExpiredToken() {
+            // given
+            JwtTokenProvider shortLived = new JwtTokenProvider(SECRET, 1L, REFRESH_EXPIRATION);
+            String token = shortLived.createAccessToken(1L, "test@test.com");
+
+            // when & then
+            assertThat(shortLived.isValid(token)).isFalse();
         }
 
         @Test

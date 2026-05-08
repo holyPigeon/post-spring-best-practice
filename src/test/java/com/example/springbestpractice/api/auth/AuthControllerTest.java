@@ -1,11 +1,14 @@
 package com.example.springbestpractice.api.auth;
 
 import com.example.springbestpractice.api.auth.dto.LoginRequest;
+import com.example.springbestpractice.api.auth.dto.RefreshRequest;
+import com.example.springbestpractice.api.auth.dto.TokenResponse;
+import com.example.springbestpractice.application.auth.AuthService;
 import com.example.springbestpractice.common.exception.GlobalExceptionHandler;
 import com.example.springbestpractice.common.resolver.CurrentUserArgumentResolver;
+import com.example.springbestpractice.domain.auth.RefreshTokenNotFoundException;
 import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
-import com.example.springbestpractice.infrastructure.security.JwtTokenProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -27,6 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -37,10 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerTest {
 
     @Mock
-    AuthenticationManager authenticationManager;
-
-    @Mock
-    JwtTokenProvider jwtTokenProvider;
+    AuthService authService;
 
     @InjectMocks
     AuthController authController;
@@ -78,21 +78,19 @@ class AuthControllerTest {
     class Login {
 
         @Test
-        @DisplayName("올바른 이메일과 비밀번호로 로그인하면 200과 토큰을 반환한다")
+        @DisplayName("올바른 이메일과 비밀번호로 로그인하면 200과 토큰 쌍을 반환한다")
         void loginSuccess() throws Exception {
             // given
             LoginRequest request = new LoginRequest("test@test.com", "password");
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            given(authenticationManager.authenticate(any())).willReturn(auth);
-            given(jwtTokenProvider.createToken(1L, "test@test.com")).willReturn("jwt-token");
+            given(authService.login(any())).willReturn(TokenResponse.of("access-token", "refresh-token"));
 
             // when & then
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.accessToken").value("jwt-token"));
+                    .andExpect(jsonPath("$.accessToken").value("access-token"))
+                    .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
         }
 
         @Test
@@ -100,7 +98,7 @@ class AuthControllerTest {
         void loginBadCredentials() throws Exception {
             // given
             LoginRequest request = new LoginRequest("test@test.com", "wrong");
-            given(authenticationManager.authenticate(any())).willThrow(new BadCredentialsException("bad credentials"));
+            given(authService.login(any())).willThrow(new BadCredentialsException("bad credentials"));
 
             // when & then
             mockMvc.perform(post("/api/auth/login")
@@ -108,6 +106,61 @@ class AuthControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.message").value("이메일 또는 비밀번호가 올바르지 않습니다."));
+        }
+    }
+
+    @Nested
+    @DisplayName("토큰 갱신")
+    class Refresh {
+
+        @Test
+        @DisplayName("유효한 리프레시 토큰으로 요청하면 200과 새 토큰 쌍을 반환한다")
+        void refreshSuccess() throws Exception {
+            // given
+            RefreshRequest request = new RefreshRequest("valid-refresh-token");
+            given(authService.refresh(any())).willReturn(TokenResponse.of("new-access-token", "new-refresh-token"));
+
+            // when & then
+            mockMvc.perform(post("/api/auth/refresh")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                    .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
+        }
+
+        @Test
+        @DisplayName("유효하지 않은 리프레시 토큰이면 401을 반환한다")
+        void refreshWithInvalidToken() throws Exception {
+            // given
+            RefreshRequest request = new RefreshRequest("invalid-token");
+            given(authService.refresh(any())).willThrow(new RefreshTokenNotFoundException());
+
+            // when & then
+            mockMvc.perform(post("/api/auth/refresh")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.message").value("유효하지 않은 리프레시 토큰입니다."));
+        }
+    }
+
+    @Nested
+    @DisplayName("로그아웃")
+    class Logout {
+
+        @Test
+        @DisplayName("로그아웃 요청 시 204를 반환한다")
+        void logoutSuccess() throws Exception {
+            // given
+            RefreshRequest request = new RefreshRequest("some-refresh-token");
+            willDoNothing().given(authService).logout(any());
+
+            // when & then
+            mockMvc.perform(post("/api/auth/logout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
         }
     }
 
