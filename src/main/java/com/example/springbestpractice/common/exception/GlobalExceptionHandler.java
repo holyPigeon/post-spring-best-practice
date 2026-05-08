@@ -1,5 +1,7 @@
 package com.example.springbestpractice.common.exception;
 
+import com.example.springbestpractice.domain.auth.ExpiredRefreshTokenException;
+import com.example.springbestpractice.domain.auth.RefreshTokenNotFoundException;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
@@ -42,6 +44,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse("이메일 또는 비밀번호가 올바르지 않습니다."));
+    }
+
+    @ExceptionHandler(RefreshTokenNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRefreshTokenNotFound(RefreshTokenNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(ExpiredRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredRefreshToken(ExpiredRefreshTokenException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(e.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
