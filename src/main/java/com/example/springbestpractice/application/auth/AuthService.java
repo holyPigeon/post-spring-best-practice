@@ -45,12 +45,11 @@ public class AuthService {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(request.refreshToken())
                 .orElseThrow(RefreshTokenNotFoundException::new);
 
+        refreshTokenRepository.delete(refreshToken);
+
         if (refreshToken.isExpired()) {
-            refreshTokenRepository.delete(refreshToken);
             throw new ExpiredRefreshTokenException();
         }
-
-        refreshTokenRepository.delete(refreshToken);
 
         User user = userRepository.findById(refreshToken.getUserId())
                 .orElseThrow(() -> new UserNotFoundException(refreshToken.getUserId()));

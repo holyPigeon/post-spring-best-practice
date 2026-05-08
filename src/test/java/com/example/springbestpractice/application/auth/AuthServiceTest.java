@@ -53,6 +53,8 @@ class AuthServiceTest {
     @InjectMocks
     AuthService authService;
 
+    private static final long REFRESH_EXPIRATION_MS = 604800000L;
+
     private User user;
     private CustomUserDetails userDetails;
 
@@ -79,7 +81,7 @@ class AuthServiceTest {
             Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             given(authenticationManager.authenticate(any())).willReturn(auth);
             given(jwtTokenProvider.createAccessToken(1L, "test@test.com")).willReturn("access-token");
-            given(jwtTokenProvider.getRefreshTokenExpiration()).willReturn(604800000L);
+            given(jwtTokenProvider.getRefreshTokenExpiration()).willReturn(REFRESH_EXPIRATION_MS);
 
             // when
             TokenResponse result = authService.login(request);
@@ -111,11 +113,11 @@ class AuthServiceTest {
         @DisplayName("유효한 리프레시 토큰으로 기존 토큰을 삭제하고 새 토큰 쌍을 반환한다")
         void refreshSuccess() {
             // given
-            RefreshToken refreshToken = RefreshToken.create(1L, "valid-token", 604800000L);
+            RefreshToken refreshToken = RefreshToken.create(1L, "valid-token", REFRESH_EXPIRATION_MS);
             given(refreshTokenRepository.findByToken("valid-token")).willReturn(Optional.of(refreshToken));
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
             given(jwtTokenProvider.createAccessToken(1L, "test@test.com")).willReturn("new-access-token");
-            given(jwtTokenProvider.getRefreshTokenExpiration()).willReturn(604800000L);
+            given(jwtTokenProvider.getRefreshTokenExpiration()).willReturn(REFRESH_EXPIRATION_MS);
 
             // when
             TokenResponse result = authService.refresh(new RefreshRequest("valid-token"));
@@ -163,7 +165,7 @@ class AuthServiceTest {
         @DisplayName("유효한 리프레시 토큰으로 로그아웃하면 해당 토큰을 삭제한다")
         void logoutSuccess() {
             // given
-            RefreshToken refreshToken = RefreshToken.create(1L, "valid-token", 604800000L);
+            RefreshToken refreshToken = RefreshToken.create(1L, "valid-token", REFRESH_EXPIRATION_MS);
             given(refreshTokenRepository.findByToken("valid-token")).willReturn(Optional.of(refreshToken));
 
             // when

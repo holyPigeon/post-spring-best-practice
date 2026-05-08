@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("리프레시 토큰")
 class RefreshTokenTest {
 
+    private static final long REFRESH_EXPIRATION_MS = 604800000L;
+
     @Nested
     @DisplayName("만료 여부 확인")
     class IsExpired {
@@ -19,7 +21,7 @@ class RefreshTokenTest {
         @DisplayName("만료 시간이 충분히 남아있으면 false를 반환한다")
         void returnFalseWhenNotExpired() {
             // given
-            RefreshToken token = RefreshToken.create(1L, "token", 604800000L);
+            RefreshToken token = RefreshToken.create(1L, "token", REFRESH_EXPIRATION_MS);
 
             // when & then
             assertThat(token.isExpired()).isFalse();

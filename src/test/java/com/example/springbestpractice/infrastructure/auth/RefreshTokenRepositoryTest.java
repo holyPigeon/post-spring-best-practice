@@ -16,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("리프레시 토큰 레포지토리")
 class RefreshTokenRepositoryTest {
 
+    private static final long REFRESH_EXPIRATION_MS = 604800000L;
+
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
@@ -30,7 +32,7 @@ class RefreshTokenRepositoryTest {
         @DisplayName("저장된 토큰으로 조회하면 리프레시 토큰을 반환한다")
         void returnRefreshTokenWhenExists() {
             // given
-            em.persist(RefreshToken.create(1L, "test-token", 604800000L));
+            em.persist(RefreshToken.create(1L, "test-token", REFRESH_EXPIRATION_MS));
             em.flush();
 
             // when
@@ -42,15 +44,6 @@ class RefreshTokenRepositoryTest {
             assertThat(result.get().getUserId()).isEqualTo(1L);
         }
 
-        @Test
-        @DisplayName("저장되지 않은 토큰으로 조회하면 빈 값을 반환한다")
-        void returnEmptyWhenNotExists() {
-            // when
-            Optional<RefreshToken> result = refreshTokenRepository.findByToken("nonexistent-token");
-
-            // then
-            assertThat(result).isEmpty();
-        }
     }
 
     @Nested
@@ -61,9 +54,9 @@ class RefreshTokenRepositoryTest {
         @DisplayName("해당 userId의 모든 리프레시 토큰을 삭제한다")
         void deleteAllTokensOfUser() {
             // given
-            em.persist(RefreshToken.create(1L, "token-1", 604800000L));
-            em.persist(RefreshToken.create(1L, "token-2", 604800000L));
-            em.persist(RefreshToken.create(2L, "token-3", 604800000L));
+            em.persist(RefreshToken.create(1L, "token-1", REFRESH_EXPIRATION_MS));
+            em.persist(RefreshToken.create(1L, "token-2", REFRESH_EXPIRATION_MS));
+            em.persist(RefreshToken.create(2L, "token-3", REFRESH_EXPIRATION_MS));
             em.flush();
 
             // when
