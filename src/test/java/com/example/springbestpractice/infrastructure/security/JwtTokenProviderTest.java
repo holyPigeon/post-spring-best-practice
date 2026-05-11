@@ -13,13 +13,13 @@ class JwtTokenProviderTest {
 
     private static final String SECRET = "spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that";
     private static final long ACCESS_EXPIRATION = 1800000L;
-    private static final long REFRESH_EXPIRATION = 604800000L;
+    private static final long REFRESH_EXPIRATION_MS = 604800000L;
 
     JwtTokenProvider jwtTokenProvider;
 
     @BeforeEach
     void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(SECRET, ACCESS_EXPIRATION, REFRESH_EXPIRATION);
+        jwtTokenProvider = new JwtTokenProvider(SECRET, ACCESS_EXPIRATION, REFRESH_EXPIRATION_MS);
     }
 
     @Nested
@@ -58,7 +58,7 @@ class JwtTokenProviderTest {
         @DisplayName("만료된 토큰이면 false를 반환한다")
         void returnFalseForExpiredToken() {
             // given
-            JwtTokenProvider shortLived = new JwtTokenProvider(SECRET, 1L, REFRESH_EXPIRATION);
+            JwtTokenProvider shortLived = new JwtTokenProvider(SECRET, 1L, REFRESH_EXPIRATION_MS);
             String token = shortLived.createAccessToken(1L, "test@test.com");
 
             // when & then
