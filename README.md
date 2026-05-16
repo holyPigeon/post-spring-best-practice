@@ -26,3 +26,69 @@
 새로운 기능을 추가하더라도 컨트롤러가 모든 책임을 갖지 않고, 서비스가 유스케이스를 조율하며, 도메인과 인프라가 각자의 역할 안에서 변경되도록 구성하는 방향을 지향합니다.
 
 결과적으로 `spring-best-practice`는 Spring을 사용하는 방식에 대한 개인적인 실험이자, 더 나은 백엔드 구조를 연습하기 위한 기준점입니다.
+
+## Docker Compose 실행
+
+로컬에서 Spring 애플리케이션과 MySQL을 함께 실행하려면 Docker Compose를 사용할 수 있습니다. 기본 프로파일은 `local`이며, Hibernate DDL 전략은 `update`입니다.
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+애플리케이션은 기본적으로 `http://localhost:8080`에서 실행되고, MySQL은 로컬 `3306` 포트로 노출됩니다.
+
+```bash
+docker compose logs -f spring
+docker compose down
+```
+
+헬스체크는 Actuator health endpoint를 사용합니다.
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+MySQL 데이터는 `mysql-data` Docker volume에 저장됩니다. 데이터를 포함해 완전히 초기화하려면 다음 명령을 사용합니다.
+
+```bash
+docker compose down -v
+```
+
+기본 접속 정보는 다음과 같습니다.
+
+| 항목 | 기본값 |
+|---|---|
+| Database | `spring_best_practice` |
+| User | `spring` |
+| Password | `spring` |
+| Root password | `root` |
+| JDBC URL | `jdbc:mysql://mysql:3306/spring_best_practice` |
+
+주요 환경변수는 `.env`에서 변경할 수 있습니다.
+
+| 환경변수 | 설명 |
+|---|---|
+| `SPRING_PROFILES_ACTIVE` | Spring 활성 프로파일. 로컬 기본값은 `local`, 운영은 `prod` |
+| `APP_PORT` | 호스트에 노출할 Spring 애플리케이션 포트 |
+| `SERVER_PORT` | 컨테이너 내부 Spring 애플리케이션 포트 |
+| `MYSQL_PORT` | 호스트에 노출할 MySQL 포트 |
+| `JAVA_TOOL_OPTIONS` | 컨테이너 JVM 옵션 |
+| `MYSQL_DATABASE` | MySQL 초기 데이터베이스 이름 |
+| `MYSQL_USER` | MySQL 애플리케이션 사용자 |
+| `MYSQL_PASSWORD` | MySQL 애플리케이션 사용자 비밀번호 |
+| `MYSQL_ROOT_PASSWORD` | MySQL root 비밀번호 |
+| `SPRING_DATASOURCE_URL` | Spring datasource JDBC URL |
+| `SPRING_DATASOURCE_USERNAME` | Spring datasource 사용자 |
+| `SPRING_DATASOURCE_PASSWORD` | Spring datasource 비밀번호 |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | Hibernate DDL 전략 |
+| `DB_POOL_MAX_SIZE` | HikariCP maximum pool size |
+| `DB_POOL_MIN_IDLE` | HikariCP minimum idle connection 수 |
+| `DB_CONNECTION_TIMEOUT` | HikariCP connection timeout(ms) |
+| `DB_IDLE_TIMEOUT` | HikariCP idle timeout(ms) |
+| `DB_MAX_LIFETIME` | HikariCP max lifetime(ms) |
+| `JWT_SECRET` | JWT 서명 secret |
+| `JWT_ACCESS_TOKEN_EXPIRATION` | access token 만료 시간(ms) |
+| `JWT_REFRESH_TOKEN_EXPIRATION` | refresh token 만료 시간(ms) |
+
+운영 배포에서는 `SPRING_PROFILES_ACTIVE=prod`를 사용합니다. `prod` 프로파일은 DB 접속 정보와 JWT 설정을 기본값 없이 요구하며, Hibernate DDL 전략은 기본적으로 `validate`입니다. 운영 DB 스키마는 애플리케이션 실행 전에 별도로 준비되어 있어야 합니다.
