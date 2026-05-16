@@ -1,0 +1,69 @@
+services:
+  spring:
+    build:
+      context: .
+    ports:
+      - "${APP_PORT:-8080}:${SERVER_PORT:-8080}"
+    environment:
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILES_ACTIVE:-local}"
+      SERVER_PORT: "${SERVER_PORT:-8080}"
+      JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:--XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=75.0 -Duser.timezone=Asia/Seoul}"
+      SPRING_DATASOURCE_URL: "${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql:3306/spring_best_practice?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}"
+      SPRING_DATASOURCE_USERNAME: "${SPRING_DATASOURCE_USERNAME:-spring}"
+      SPRING_DATASOURCE_PASSWORD: "${SPRING_DATASOURCE_PASSWORD:-spring}"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}"
+      DB_POOL_MAX_SIZE: "${DB_POOL_MAX_SIZE:-10}"
+      DB_POOL_MIN_IDLE: "${DB_POOL_MIN_IDLE:-2}"
+      DB_CONNECTION_TIMEOUT: "${DB_CONNECTION_TIMEOUT:-30000}"
+      DB_IDLE_TIMEOUT: "${DB_IDLE_TIMEOUT:-600000}"
+      DB_MAX_LIFETIME: "${DB_MAX_LIFETIME:-1800000}"
+      JWT_SECRET: "${JWT_SECRET:-spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that}"
+      JWT_ACCESS_TOKEN_EXPIRATION: "${JWT_ACCESS_TOKEN_EXPIRATION:-1800000}"
+      JWT_REFRESH_TOKEN_EXPIRATION: "${JWT_REFRESH_TOKEN_EXPIRATION:-604800000}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:$${SERVER_PORT:-8080}/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    stop_grace_period: 30s
+    networks:
+      - backend
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+09:00
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      TZ: Asia/Seoul
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-spring_best_practice}"
+      MYSQL_USER: "${MYSQL_USER:-spring}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-spring}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root}"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$${MYSQL_ROOT_PASSWORD} mysqladmin ping -h 127.0.0.1 -uroot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    stop_grace_period: 30s
+    networks:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+
+networks:
+  backend:
+    driver: bridge
