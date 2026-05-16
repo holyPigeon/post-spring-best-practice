@@ -1,8 +1,59 @@
+server:
+  port: "${SERVER_PORT:8080}"
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: "${SERVER_TOMCAT_THREADS_MAX:200}"
+      min-spare: "${SERVER_TOMCAT_THREADS_MIN_SPARE:10}"
+    accept-count: "${SERVER_TOMCAT_ACCEPT_COUNT:100}"
+    connection-timeout: "${SERVER_TOMCAT_CONNECTION_TIMEOUT:5s}"
+
 spring:
   application:
     name: spring-best-practice
+  profiles:
+    default: local
+  lifecycle:
+    timeout-per-shutdown-phase: "${SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE:30s}"
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: SpringBestPracticeHikariPool
+      maximum-pool-size: "${DB_POOL_MAX_SIZE:10}"
+      minimum-idle: "${DB_POOL_MIN_IDLE:2}"
+      connection-timeout: "${DB_CONNECTION_TIMEOUT:30000}"
+      idle-timeout: "${DB_IDLE_TIMEOUT:600000}"
+      max-lifetime: "${DB_MAX_LIFETIME:1800000}"
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: "${APP_TIME_ZONE:Asia/Seoul}"
+        default_batch_fetch_size: "${HIBERNATE_DEFAULT_BATCH_FETCH_SIZE:100}"
+        format_sql: "${HIBERNATE_FORMAT_SQL:false}"
+        highlight_sql: "${HIBERNATE_HIGHLIGHT_SQL:false}"
+  jackson:
+    time-zone: "${APP_TIME_ZONE:Asia/Seoul}"
+    serialization:
+      write-dates-as-timestamps: false
 
-jwt:
-  secret: spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that
-  access-token-expiration: 1800000
-  refresh-token-expiration: 604800000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+
+logging:
+  level:
+    root: "${LOGGING_LEVEL_ROOT:INFO}"
+    org.hibernate.SQL: "${LOGGING_LEVEL_SQL:WARN}"
+    org.hibernate.orm.jdbc.bind: "${LOGGING_LEVEL_BIND:WARN}"

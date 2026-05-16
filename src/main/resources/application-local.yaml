@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: "${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/spring_best_practice?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}"
+    username: "${SPRING_DATASOURCE_USERNAME:spring}"
+    password: "${SPRING_DATASOURCE_PASSWORD:spring}"
+  jpa:
+    hibernate:
+      ddl-auto: "${SPRING_JPA_HIBERNATE_DDL_AUTO:update}"
+
+jwt:
+  secret: "${JWT_SECRET:spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that}"
+  access-token-expiration: "${JWT_ACCESS_TOKEN_EXPIRATION:1800000}"
+  refresh-token-expiration: "${JWT_REFRESH_TOKEN_EXPIRATION:604800000}"
