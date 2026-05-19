@@ -5,6 +5,7 @@ import com.example.springbestpractice.api.post.dto.PostResponse;
 import com.example.springbestpractice.api.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
+import com.example.springbestpractice.infrastructure.comment.CommentRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +31,9 @@ class PostServiceTest {
 
     @Mock
     PostRepository postRepository;
+
+    @Mock
+    CommentRepository commentRepository;
 
     @InjectMocks
     PostService postService;
@@ -191,6 +195,7 @@ class PostServiceTest {
             postService.deletePost(1L);
 
             // then
+            verify(commentRepository).deleteByPostId(1L);
             verify(postRepository).delete(post);
         }
     }

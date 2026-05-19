@@ -5,6 +5,7 @@ import com.example.springbestpractice.api.post.dto.PostResponse;
 import com.example.springbestpractice.api.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
+import com.example.springbestpractice.infrastructure.comment.CommentRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public PostResponse createPost(PostCreateRequest request) {
@@ -49,6 +51,7 @@ public class PostService {
     public void deletePost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
+        commentRepository.deleteByPostId(id);
         postRepository.delete(post);
     }
 }
