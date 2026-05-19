@@ -2,6 +2,7 @@ package com.example.springbestpractice.common.exception;
 
 import com.example.springbestpractice.domain.auth.ExpiredRefreshTokenException;
 import com.example.springbestpractice.domain.auth.RefreshTokenNotFoundException;
+import com.example.springbestpractice.domain.comment.CommentNotFoundException;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
@@ -18,6 +19,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity<ErrorResponse> handlePostNotFound(PostNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCommentNotFound(CommentNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(e.getMessage()));
     }
