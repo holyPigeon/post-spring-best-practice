@@ -6,11 +6,17 @@ import com.example.springbestpractice.application.comment.dto.CommentResponse;
 import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
 import com.example.springbestpractice.domain.comment.CommentNotFoundException;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
+import com.example.springbestpractice.domain.user.User;
+import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -41,6 +47,25 @@ class CommentControllerTest {
     @MockitoBean
     CommentService commentService;
 
+    @BeforeEach
+    void setSecurityContext() {
+        User user = User.builder()
+                .id(2L)
+                .email("commenter@test.com")
+                .nickname("댓글 작성자")
+                .password("password")
+                .build();
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+        );
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     private CommentResponse sampleResponse() {
         return new CommentResponse(1L, 1L, "댓글 내용", "댓글 작성자", null, null);
     }
@@ -49,8 +74,8 @@ class CommentControllerTest {
     @DisplayName("POST /api/posts/{postId}/comments - 201과 생성된 댓글을 반환한다")
     void createComment() throws Exception {
         // given
-        CommentCreateRequest request = new CommentCreateRequest("댓글 내용", "댓글 작성자");
-        given(commentService.createComment(eq(1L), any())).willReturn(sampleResponse());
+        CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
+        given(commentService.createComment(eq(1L), any(), any())).willReturn(sampleResponse());
 
         // when & then
         mockMvc.perform(post("/api/posts/1/comments")
@@ -67,7 +92,7 @@ class CommentControllerTest {
     @DisplayName("POST /api/posts/{postId}/comments - 내용이 비어 있으면 400을 반환한다")
     void createCommentBlankContent() throws Exception {
         // given
-        CommentCreateRequest request = new CommentCreateRequest(" ", "댓글 작성자");
+        CommentCreateRequest request = new CommentCreateRequest(" ");
 
         // when & then
         mockMvc.perform(post("/api/posts/1/comments")
@@ -133,7 +158,7 @@ class CommentControllerTest {
         // given
         CommentUpdateRequest request = new CommentUpdateRequest("새 댓글 내용");
         CommentResponse updated = new CommentResponse(1L, 1L, "새 댓글 내용", "댓글 작성자", null, null);
-        given(commentService.updateComment(eq(1L), eq(1L), any())).willReturn(updated);
+        given(commentService.updateComment(eq(1L), eq(1L), any(), any())).willReturn(updated);
 
         // when & then
         mockMvc.perform(put("/api/posts/1/comments/1")
@@ -147,7 +172,7 @@ class CommentControllerTest {
     @DisplayName("DELETE /api/posts/{postId}/comments/{commentId} - 204를 반환한다")
     void deleteComment() throws Exception {
         // given
-        willDoNothing().given(commentService).deleteComment(1L, 1L);
+        willDoNothing().given(commentService).deleteComment(eq(1L), eq(1L), any());
 
         // when & then
         mockMvc.perform(delete("/api/posts/1/comments/1"))

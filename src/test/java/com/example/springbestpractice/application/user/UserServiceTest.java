@@ -4,6 +4,7 @@ import com.example.springbestpractice.application.user.dto.UserCreateRequest;
 import com.example.springbestpractice.application.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.application.user.dto.UserResponse;
 import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
+import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
 import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -41,6 +43,7 @@ class UserServiceTest {
     UserService userService;
 
     private User user;
+    private LoginUser loginUser;
 
     @BeforeEach
     void setUp() {
@@ -50,6 +53,7 @@ class UserServiceTest {
                 .nickname("테스터")
                 .password("password")
                 .build();
+        loginUser = new LoginUser(1L, "test@test.com", "테스터");
     }
 
     @Nested
@@ -100,7 +104,7 @@ class UserServiceTest {
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.getUser(999L))
+            assertThatThrownBy(() -> userService.getUser(999L, loginUser(999L)))
                     .isInstanceOf(UserNotFoundException.class)
                     .hasMessage("유저를 찾을 수 없습니다. id=999");
         }
@@ -112,11 +116,18 @@ class UserServiceTest {
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
-            UserResponse result = userService.getUser(1L);
+            UserResponse result = userService.getUser(1L, loginUser);
 
             // then
             assertThat(result.id()).isEqualTo(1L);
             assertThat(result.email()).isEqualTo("test@test.com");
+        }
+
+        @Test
+        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotSelf() {
+            assertThatThrownBy(() -> userService.getUser(2L, loginUser))
+                    .isInstanceOf(AccessDeniedException.class);
         }
     }
 
@@ -166,7 +177,7 @@ class UserServiceTest {
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.updateUser(999L, request))
+            assertThatThrownBy(() -> userService.updateUser(999L, request, loginUser(999L)))
                     .isInstanceOf(UserNotFoundException.class);
         }
 
@@ -178,10 +189,21 @@ class UserServiceTest {
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
-            UserResponse result = userService.updateUser(1L, request);
+            UserResponse result = userService.updateUser(1L, request, loginUser);
 
             // then
             assertThat(result.nickname()).isEqualTo("새닉네임");
+        }
+
+        @Test
+        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotSelf() {
+            // given
+            UserUpdateRequest request = new UserUpdateRequest("새닉네임");
+
+            // when & then
+            assertThatThrownBy(() -> userService.updateUser(2L, request, loginUser))
+                    .isInstanceOf(AccessDeniedException.class);
         }
     }
 
@@ -197,7 +219,7 @@ class UserServiceTest {
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.updatePassword(999L, request))
+            assertThatThrownBy(() -> userService.updatePassword(999L, request, loginUser(999L)))
                     .isInstanceOf(UserNotFoundException.class);
         }
 
@@ -210,11 +232,22 @@ class UserServiceTest {
             given(passwordEncoder.encode("newpassword")).willReturn("encoded-newpassword");
 
             // when
-            userService.updatePassword(1L, request);
+            userService.updatePassword(1L, request, loginUser);
 
             // then
             verify(passwordEncoder).encode("newpassword");
             assertThat(user.getPassword()).isEqualTo("encoded-newpassword");
+        }
+
+        @Test
+        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotSelf() {
+            // given
+            UserPasswordUpdateRequest request = new UserPasswordUpdateRequest("newpassword");
+
+            // when & then
+            assertThatThrownBy(() -> userService.updatePassword(2L, request, loginUser))
+                    .isInstanceOf(AccessDeniedException.class);
         }
     }
 
@@ -229,7 +262,7 @@ class UserServiceTest {
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.deleteUser(999L))
+            assertThatThrownBy(() -> userService.deleteUser(999L, loginUser(999L)))
                     .isInstanceOf(UserNotFoundException.class);
         }
 
@@ -240,10 +273,21 @@ class UserServiceTest {
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
-            userService.deleteUser(1L);
+            userService.deleteUser(1L, loginUser);
 
             // then
             verify(userRepository).delete(user);
         }
+
+        @Test
+        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotSelf() {
+            assertThatThrownBy(() -> userService.deleteUser(2L, loginUser))
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+    }
+
+    private LoginUser loginUser(Long id) {
+        return new LoginUser(id, "user" + id + "@test.com", "사용자" + id);
     }
 }

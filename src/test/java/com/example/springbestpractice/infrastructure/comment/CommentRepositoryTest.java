@@ -32,11 +32,11 @@ class CommentRepositoryTest {
         @DisplayName("게시글에 속한 댓글만 ID 오름차순으로 반환한다")
         void returnCommentsByPostId() {
             // given
-            Post post = em.persist(Post.create("제목", "내용", "작성자"));
-            Post anotherPost = em.persist(Post.create("다른 제목", "다른 내용", "작성자"));
-            Comment first = em.persist(Comment.create(post, "첫 번째 댓글", "댓글 작성자"));
-            Comment second = em.persist(Comment.create(post, "두 번째 댓글", "댓글 작성자"));
-            em.persist(Comment.create(anotherPost, "다른 게시글 댓글", "댓글 작성자"));
+            Post post = em.persist(Post.create("제목", "내용", 1L, "작성자"));
+            Post anotherPost = em.persist(Post.create("다른 제목", "다른 내용", 1L, "작성자"));
+            Comment first = em.persist(Comment.create(post, "첫 번째 댓글", 2L, "댓글 작성자"));
+            Comment second = em.persist(Comment.create(post, "두 번째 댓글", 2L, "댓글 작성자"));
+            em.persist(Comment.create(anotherPost, "다른 게시글 댓글", 2L, "댓글 작성자"));
             em.flush();
             em.clear();
 
@@ -58,8 +58,8 @@ class CommentRepositoryTest {
         @DisplayName("댓글이 게시글에 속하면 댓글을 반환한다")
         void returnCommentWhenBelongsToPost() {
             // given
-            Post post = em.persist(Post.create("제목", "내용", "작성자"));
-            Comment comment = em.persist(Comment.create(post, "댓글 내용", "댓글 작성자"));
+            Post post = em.persist(Post.create("제목", "내용", 1L, "작성자"));
+            Comment comment = em.persist(Comment.create(post, "댓글 내용", 2L, "댓글 작성자"));
             em.flush();
             em.clear();
 
@@ -75,9 +75,9 @@ class CommentRepositoryTest {
         @DisplayName("댓글이 게시글에 속하지 않으면 빈 값을 반환한다")
         void returnEmptyWhenCommentDoesNotBelongToPost() {
             // given
-            Post post = em.persist(Post.create("제목", "내용", "작성자"));
-            Post anotherPost = em.persist(Post.create("다른 제목", "다른 내용", "작성자"));
-            Comment comment = em.persist(Comment.create(anotherPost, "댓글 내용", "댓글 작성자"));
+            Post post = em.persist(Post.create("제목", "내용", 1L, "작성자"));
+            Post anotherPost = em.persist(Post.create("다른 제목", "다른 내용", 1L, "작성자"));
+            Comment comment = em.persist(Comment.create(anotherPost, "댓글 내용", 2L, "댓글 작성자"));
             em.flush();
             em.clear();
 
@@ -97,11 +97,11 @@ class CommentRepositoryTest {
         @DisplayName("게시글에 속한 댓글만 모두 삭제한다")
         void deleteCommentsByPostId() {
             // given
-            Post post = em.persist(Post.create("제목", "내용", "작성자"));
-            Post anotherPost = em.persist(Post.create("다른 제목", "다른 내용", "작성자"));
-            Comment first = em.persist(Comment.create(post, "첫 번째 댓글", "댓글 작성자"));
-            Comment second = em.persist(Comment.create(post, "두 번째 댓글", "댓글 작성자"));
-            Comment another = em.persist(Comment.create(anotherPost, "다른 게시글 댓글", "댓글 작성자"));
+            Post post = em.persist(Post.create("제목", "내용", 1L, "작성자"));
+            Post anotherPost = em.persist(Post.create("다른 제목", "다른 내용", 1L, "작성자"));
+            Comment first = em.persist(Comment.create(post, "첫 번째 댓글", 2L, "댓글 작성자"));
+            Comment second = em.persist(Comment.create(post, "두 번째 댓글", 2L, "댓글 작성자"));
+            Comment another = em.persist(Comment.create(anotherPost, "다른 게시글 댓글", 2L, "댓글 작성자"));
             em.flush();
             em.clear();
 

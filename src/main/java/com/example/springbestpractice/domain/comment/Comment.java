@@ -40,6 +40,9 @@ public class Comment {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(nullable = false, updatable = false)
+    private Long authorId;
+
     @Column(nullable = false)
     private String author;
 
@@ -50,10 +53,11 @@ public class Comment {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public static Comment create(Post post, String content, String author) {
+    public static Comment create(Post post, String content, Long authorId, String author) {
         return Comment.builder()
                 .post(requirePost(post))
                 .content(requireNotBlank(content, "댓글 내용은 필수입니다."))
+                .authorId(requireAuthorId(authorId))
                 .author(requireNotBlank(author, "작성자는 필수입니다."))
                 .build();
     }
@@ -62,11 +66,22 @@ public class Comment {
         this.content = requireNotBlank(content, "댓글 내용은 필수입니다.");
     }
 
+    public boolean isWrittenBy(Long userId) {
+        return authorId != null && authorId.equals(userId);
+    }
+
     private static Post requirePost(Post post) {
         if (post == null) {
             throw new IllegalArgumentException("게시글은 필수입니다.");
         }
         return post;
+    }
+
+    private static Long requireAuthorId(Long authorId) {
+        if (authorId == null) {
+            throw new IllegalArgumentException("작성자 아이디는 필수입니다.");
+        }
+        return authorId;
     }
 
     private static String requireNotBlank(String value, String message) {

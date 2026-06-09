@@ -4,6 +4,8 @@ import com.example.springbestpractice.application.post.PostService;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
+import com.example.springbestpractice.common.annotation.CurrentUser;
+import com.example.springbestpractice.common.model.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,8 +22,11 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping
-    public ResponseEntity<PostResponse> createPost(@Valid @RequestBody PostCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(request));
+    public ResponseEntity<PostResponse> createPost(
+            @Valid @RequestBody PostCreateRequest request,
+            @CurrentUser LoginUser loginUser
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(request, loginUser));
     }
 
     @GetMapping
@@ -35,13 +40,17 @@ public class PostController {
     }
 
     @PutMapping("/{id}")
-    public PostResponse updatePost(@PathVariable Long id, @Valid @RequestBody PostUpdateRequest request) {
-        return postService.updatePost(id, request);
+    public PostResponse updatePost(
+            @PathVariable Long id,
+            @Valid @RequestBody PostUpdateRequest request,
+            @CurrentUser LoginUser loginUser
+    ) {
+        return postService.updatePost(id, request, loginUser);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePost(@PathVariable Long id) {
-        postService.deletePost(id);
+    public void deletePost(@PathVariable Long id, @CurrentUser LoginUser loginUser) {
+        postService.deletePost(id, loginUser);
     }
 }

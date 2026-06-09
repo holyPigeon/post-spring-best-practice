@@ -6,12 +6,18 @@ import com.example.springbestpractice.application.user.dto.UserPasswordUpdateReq
 import com.example.springbestpractice.application.user.dto.UserResponse;
 import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
+import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
+import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -37,6 +43,25 @@ class UserControllerTest {
 
     @MockitoBean
     UserService userService;
+
+    @BeforeEach
+    void setSecurityContext() {
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.com")
+                .nickname("테스터")
+                .password("password")
+                .build();
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+        );
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     private UserResponse sampleResponse() {
         return new UserResponse(1L, "test@test.com", "테스터", null, null);
@@ -105,7 +130,7 @@ class UserControllerTest {
     @DisplayName("GET /api/users/{id} - 존재하는 ID면 200과 유저를 반환한다")
     void getUser() throws Exception {
         // given
-        given(userService.getUser(1L)).willReturn(sampleResponse());
+        given(userService.getUser(eq(1L), any())).willReturn(sampleResponse());
 
         // when & then
         mockMvc.perform(get("/api/users/1"))
@@ -118,7 +143,7 @@ class UserControllerTest {
     @DisplayName("GET /api/users/{id} - 존재하지 않는 ID면 404를 반환한다")
     void getUserNotFound() throws Exception {
         // given
-        given(userService.getUser(999L)).willThrow(new UserNotFoundException(999L));
+        given(userService.getUser(eq(999L), any())).willThrow(new UserNotFoundException(999L));
 
         // when & then
         mockMvc.perform(get("/api/users/999"))
@@ -131,7 +156,7 @@ class UserControllerTest {
     void updatePassword() throws Exception {
         // given
         UserPasswordUpdateRequest request = new UserPasswordUpdateRequest("newpassword");
-        willDoNothing().given(userService).updatePassword(eq(1L), any());
+        willDoNothing().given(userService).updatePassword(eq(1L), any(), any());
 
         // when & then
         mockMvc.perform(patch("/api/users/1/password")
@@ -144,7 +169,7 @@ class UserControllerTest {
     @DisplayName("DELETE /api/users/{id} - 204를 반환한다")
     void deleteUser() throws Exception {
         // given
-        willDoNothing().given(userService).deleteUser(1L);
+        willDoNothing().given(userService).deleteUser(eq(1L), any());
 
         // when & then
         mockMvc.perform(delete("/api/users/1"))

@@ -5,11 +5,17 @@ import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
+import com.example.springbestpractice.domain.user.User;
+import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -36,6 +42,25 @@ class PostControllerTest {
     @MockitoBean
     PostService postService;
 
+    @BeforeEach
+    void setSecurityContext() {
+        User user = User.builder()
+                .id(1L)
+                .email("writer@test.com")
+                .nickname("작성자")
+                .password("password")
+                .build();
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+        );
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     private PostResponse sampleResponse() {
         return new PostResponse(1L, "제목", "내용", "작성자", null, null);
     }
@@ -44,8 +69,8 @@ class PostControllerTest {
     @DisplayName("POST /api/posts - 201과 생성된 게시글을 반환한다")
     void createPost() throws Exception {
         // given
-        PostCreateRequest request = new PostCreateRequest("제목", "내용", "작성자");
-        given(postService.createPost(any())).willReturn(sampleResponse());
+        PostCreateRequest request = new PostCreateRequest("제목", "내용");
+        given(postService.createPost(any(), any())).willReturn(sampleResponse());
 
         // when & then
         mockMvc.perform(post("/api/posts")
@@ -61,7 +86,7 @@ class PostControllerTest {
     @DisplayName("POST /api/posts - 제목이 비어 있으면 400을 반환한다")
     void createPostBlankTitle() throws Exception {
         // given
-        PostCreateRequest request = new PostCreateRequest(" ", "내용", "작성자");
+        PostCreateRequest request = new PostCreateRequest(" ", "내용");
 
         // when & then
         mockMvc.perform(post("/api/posts")
@@ -115,7 +140,7 @@ class PostControllerTest {
         // given
         PostUpdateRequest request = new PostUpdateRequest("새 제목", "새 내용");
         PostResponse updated = new PostResponse(1L, "새 제목", "새 내용", "작성자", null, null);
-        given(postService.updatePost(eq(1L), any())).willReturn(updated);
+        given(postService.updatePost(eq(1L), any(), any())).willReturn(updated);
 
         // when & then
         mockMvc.perform(put("/api/posts/1")
@@ -130,7 +155,7 @@ class PostControllerTest {
     @DisplayName("DELETE /api/posts/{id} - 204를 반환한다")
     void deletePost() throws Exception {
         // given
-        willDoNothing().given(postService).deletePost(1L);
+        willDoNothing().given(postService).deletePost(eq(1L), any());
 
         // when & then
         mockMvc.perform(delete("/api/posts/1"))

@@ -3,6 +3,7 @@ package com.example.springbestpractice.application.post;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
+import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +41,7 @@ class PostServiceTest {
     PostService postService;
 
     private Post post;
+    private LoginUser loginUser;
 
     @BeforeEach
     void setUp() {
@@ -46,8 +49,10 @@ class PostServiceTest {
                 .id(1L)
                 .title("제목")
                 .content("내용")
+                .authorId(1L)
                 .author("작성자")
                 .build();
+        loginUser = new LoginUser(1L, "writer@test.com", "작성자");
     }
 
     @Nested
@@ -58,11 +63,11 @@ class PostServiceTest {
         @DisplayName("정상 입력이면 게시글을 저장하고 PostResponse를 반환한다")
         void createPost() {
             // given
-            PostCreateRequest request = new PostCreateRequest("제목", "내용", "작성자");
+            PostCreateRequest request = new PostCreateRequest("제목", "내용");
             given(postRepository.save(any(Post.class))).willReturn(post);
 
             // when
-            PostResponse result = postService.createPost(request);
+            PostResponse result = postService.createPost(request, loginUser);
 
             // then
             assertThat(result.id()).isEqualTo(1L);
@@ -125,7 +130,13 @@ class PostServiceTest {
         @DisplayName("게시글이 있으면 전체 목록을 반환한다")
         void returnAllPosts() {
             // given
-            Post another = Post.builder().id(2L).title("제목2").content("내용2").author("작성자2").build();
+            Post another = Post.builder()
+                    .id(2L)
+                    .title("제목2")
+                    .content("내용2")
+                    .authorId(2L)
+                    .author("작성자2")
+                    .build();
             given(postRepository.findAll()).willReturn(List.of(post, another));
 
             // when
@@ -150,7 +161,7 @@ class PostServiceTest {
             given(postRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.updatePost(999L, request))
+            assertThatThrownBy(() -> postService.updatePost(999L, request, loginUser))
                     .isInstanceOf(PostNotFoundException.class);
         }
 
@@ -162,11 +173,24 @@ class PostServiceTest {
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
 
             // when
-            PostResponse result = postService.updatePost(1L, request);
+            PostResponse result = postService.updatePost(1L, request, loginUser);
 
             // then
             assertThat(result.title()).isEqualTo("새 제목");
             assertThat(result.content()).isEqualTo("새 내용");
+        }
+
+        @Test
+        @DisplayName("작성자가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotOwner() {
+            // given
+            PostUpdateRequest request = new PostUpdateRequest("새 제목", "새 내용");
+            LoginUser otherUser = new LoginUser(2L, "other@test.com", "다른 사용자");
+            given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+            // when & then
+            assertThatThrownBy(() -> postService.updatePost(1L, request, otherUser))
+                    .isInstanceOf(AccessDeniedException.class);
         }
     }
 
@@ -181,7 +205,7 @@ class PostServiceTest {
             given(postRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.deletePost(999L))
+            assertThatThrownBy(() -> postService.deletePost(999L, loginUser))
                     .isInstanceOf(PostNotFoundException.class);
         }
 
@@ -192,11 +216,23 @@ class PostServiceTest {
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
 
             // when
-            postService.deletePost(1L);
+            postService.deletePost(1L, loginUser);
 
             // then
             verify(commentRepository).deleteByPostId(1L);
             verify(postRepository).delete(post);
+        }
+
+        @Test
+        @DisplayName("작성자가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotOwner() {
+            // given
+            LoginUser otherUser = new LoginUser(2L, "other@test.com", "다른 사용자");
+            given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+            // when & then
+            assertThatThrownBy(() -> postService.deletePost(1L, otherUser))
+                    .isInstanceOf(AccessDeniedException.class);
         }
     }
 }

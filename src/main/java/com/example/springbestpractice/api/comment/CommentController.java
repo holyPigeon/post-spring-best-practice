@@ -4,6 +4,8 @@ import com.example.springbestpractice.application.comment.CommentService;
 import com.example.springbestpractice.application.comment.dto.CommentCreateRequest;
 import com.example.springbestpractice.application.comment.dto.CommentResponse;
 import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
+import com.example.springbestpractice.common.annotation.CurrentUser;
+import com.example.springbestpractice.common.model.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,9 +32,10 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<CommentResponse> createComment(
             @PathVariable Long postId,
-            @Valid @RequestBody CommentCreateRequest request
+            @Valid @RequestBody CommentCreateRequest request,
+            @CurrentUser LoginUser loginUser
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.createComment(postId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.createComment(postId, request, loginUser));
     }
 
     @GetMapping
@@ -49,14 +52,19 @@ public class CommentController {
     public CommentResponse updateComment(
             @PathVariable Long postId,
             @PathVariable Long commentId,
-            @Valid @RequestBody CommentUpdateRequest request
+            @Valid @RequestBody CommentUpdateRequest request,
+            @CurrentUser LoginUser loginUser
     ) {
-        return commentService.updateComment(postId, commentId, request);
+        return commentService.updateComment(postId, commentId, request, loginUser);
     }
 
     @DeleteMapping("/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteComment(@PathVariable Long postId, @PathVariable Long commentId) {
-        commentService.deleteComment(postId, commentId);
+    public void deleteComment(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @CurrentUser LoginUser loginUser
+    ) {
+        commentService.deleteComment(postId, commentId, loginUser);
     }
 }

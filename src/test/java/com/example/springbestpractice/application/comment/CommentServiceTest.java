@@ -3,6 +3,7 @@ package com.example.springbestpractice.application.comment;
 import com.example.springbestpractice.application.comment.dto.CommentCreateRequest;
 import com.example.springbestpractice.application.comment.dto.CommentResponse;
 import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
+import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.comment.Comment;
 import com.example.springbestpractice.domain.comment.CommentNotFoundException;
 import com.example.springbestpractice.domain.post.Post;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +44,7 @@ class CommentServiceTest {
 
     private Post post;
     private Comment comment;
+    private LoginUser loginUser;
 
     @BeforeEach
     void setUp() {
@@ -49,14 +52,17 @@ class CommentServiceTest {
                 .id(1L)
                 .title("제목")
                 .content("내용")
+                .authorId(1L)
                 .author("작성자")
                 .build();
         comment = Comment.builder()
                 .id(1L)
                 .post(post)
                 .content("댓글 내용")
+                .authorId(2L)
                 .author("댓글 작성자")
                 .build();
+        loginUser = new LoginUser(2L, "commenter@test.com", "댓글 작성자");
     }
 
     @Nested
@@ -67,11 +73,11 @@ class CommentServiceTest {
         @DisplayName("존재하지 않는 게시글 ID면 PostNotFoundException을 던진다")
         void throwExceptionWhenPostNotFound() {
             // given
-            CommentCreateRequest request = new CommentCreateRequest("댓글 내용", "댓글 작성자");
+            CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
             given(postRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> commentService.createComment(999L, request))
+            assertThatThrownBy(() -> commentService.createComment(999L, request, loginUser))
                     .isInstanceOf(PostNotFoundException.class);
         }
 
@@ -79,12 +85,12 @@ class CommentServiceTest {
         @DisplayName("정상 입력이면 댓글을 저장하고 CommentResponse를 반환한다")
         void createComment() {
             // given
-            CommentCreateRequest request = new CommentCreateRequest("댓글 내용", "댓글 작성자");
+            CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
             given(commentRepository.save(any(Comment.class))).willReturn(comment);
 
             // when
-            CommentResponse result = commentService.createComment(1L, request);
+            CommentResponse result = commentService.createComment(1L, request, loginUser);
 
             // then
             assertThat(result.id()).isEqualTo(1L);
@@ -118,6 +124,7 @@ class CommentServiceTest {
                     .id(2L)
                     .post(post)
                     .content("두 번째 댓글")
+                    .authorId(2L)
                     .author("댓글 작성자")
                     .build();
             given(postRepository.existsById(1L)).willReturn(true);
@@ -179,10 +186,24 @@ class CommentServiceTest {
             given(commentRepository.findByIdAndPostId(1L, 1L)).willReturn(Optional.of(comment));
 
             // when
-            CommentResponse result = commentService.updateComment(1L, 1L, request);
+            CommentResponse result = commentService.updateComment(1L, 1L, request, loginUser);
 
             // then
             assertThat(result.content()).isEqualTo("새 댓글 내용");
+        }
+
+        @Test
+        @DisplayName("작성자가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotOwner() {
+            // given
+            CommentUpdateRequest request = new CommentUpdateRequest("새 댓글 내용");
+            LoginUser otherUser = new LoginUser(1L, "writer@test.com", "작성자");
+            given(postRepository.existsById(1L)).willReturn(true);
+            given(commentRepository.findByIdAndPostId(1L, 1L)).willReturn(Optional.of(comment));
+
+            // when & then
+            assertThatThrownBy(() -> commentService.updateComment(1L, 1L, request, otherUser))
+                    .isInstanceOf(AccessDeniedException.class);
         }
     }
 
@@ -198,10 +219,23 @@ class CommentServiceTest {
             given(commentRepository.findByIdAndPostId(1L, 1L)).willReturn(Optional.of(comment));
 
             // when
-            commentService.deleteComment(1L, 1L);
+            commentService.deleteComment(1L, 1L, loginUser);
 
             // then
             verify(commentRepository).delete(comment);
+        }
+
+        @Test
+        @DisplayName("작성자가 아니면 AccessDeniedException을 던진다")
+        void throwExceptionWhenNotOwner() {
+            // given
+            LoginUser otherUser = new LoginUser(1L, "writer@test.com", "작성자");
+            given(postRepository.existsById(1L)).willReturn(true);
+            given(commentRepository.findByIdAndPostId(1L, 1L)).willReturn(Optional.of(comment));
+
+            // when & then
+            assertThatThrownBy(() -> commentService.deleteComment(1L, 1L, otherUser))
+                    .isInstanceOf(AccessDeniedException.class);
         }
     }
 }
