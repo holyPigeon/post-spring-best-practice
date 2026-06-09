@@ -1,9 +1,9 @@
 package com.example.springbestpractice.api.auth;
 
-import com.example.springbestpractice.api.auth.dto.LoginRequest;
-import com.example.springbestpractice.api.auth.dto.RefreshRequest;
-import com.example.springbestpractice.api.auth.dto.TokenResponse;
 import com.example.springbestpractice.application.auth.AuthService;
+import com.example.springbestpractice.application.auth.dto.LoginRequest;
+import com.example.springbestpractice.application.auth.dto.RefreshRequest;
+import com.example.springbestpractice.application.auth.dto.TokenResponse;
 import com.example.springbestpractice.common.exception.GlobalExceptionHandler;
 import com.example.springbestpractice.common.resolver.CurrentUserArgumentResolver;
 import com.example.springbestpractice.domain.auth.RefreshTokenNotFoundException;

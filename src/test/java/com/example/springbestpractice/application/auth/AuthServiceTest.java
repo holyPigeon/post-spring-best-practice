@@ -1,8 +1,8 @@
 package com.example.springbestpractice.application.auth;
 
-import com.example.springbestpractice.api.auth.dto.LoginRequest;
-import com.example.springbestpractice.api.auth.dto.RefreshRequest;
-import com.example.springbestpractice.api.auth.dto.TokenResponse;
+import com.example.springbestpractice.application.auth.dto.LoginRequest;
+import com.example.springbestpractice.application.auth.dto.RefreshRequest;
+import com.example.springbestpractice.application.auth.dto.TokenResponse;
 import com.example.springbestpractice.domain.auth.ExpiredRefreshTokenException;
 import com.example.springbestpractice.domain.auth.RefreshToken;
 import com.example.springbestpractice.domain.auth.RefreshTokenNotFoundException;

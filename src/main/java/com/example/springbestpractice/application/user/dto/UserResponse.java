@@ -1,4 +1,4 @@
-package com.example.springbestpractice.api.user.dto;
+package com.example.springbestpractice.application.user.dto;
 
 import com.example.springbestpractice.domain.user.User;
 

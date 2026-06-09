@@ -1,9 +1,9 @@
 package com.example.springbestpractice.api.post;
 
-import com.example.springbestpractice.api.post.dto.PostCreateRequest;
-import com.example.springbestpractice.api.post.dto.PostResponse;
-import com.example.springbestpractice.api.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.application.post.PostService;
+import com.example.springbestpractice.application.post.dto.PostCreateRequest;
+import com.example.springbestpractice.application.post.dto.PostResponse;
+import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

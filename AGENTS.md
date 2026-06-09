@@ -81,10 +81,10 @@ Test slices: `@WebMvcTest` (controller), `@DataJpaTest` (repository)
 
 ```
 com.example.springbestpractice/
-├── api/             # presentation: controller + 요청/응답 DTO
-│   └── {domain}/{Controller, dto/}
-├── application/     # use case: service
-│   └── {domain}/
+├── api/             # presentation: controller
+│   └── {domain}/{Controller}
+├── application/     # use case: service + 요청/응답 DTO
+│   └── {domain}/{Service, dto/}
 ├── domain/          # 핵심 도메인: entity, 도메인 예외
 │   └── {domain}/
 ├── infrastructure/  # 기술 세부사항: JPA repository 등

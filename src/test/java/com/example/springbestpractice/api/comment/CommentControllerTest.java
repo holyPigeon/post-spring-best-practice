@@ -1,9 +1,9 @@
 package com.example.springbestpractice.api.comment;
 
-import com.example.springbestpractice.api.comment.dto.CommentCreateRequest;
-import com.example.springbestpractice.api.comment.dto.CommentResponse;
-import com.example.springbestpractice.api.comment.dto.CommentUpdateRequest;
 import com.example.springbestpractice.application.comment.CommentService;
+import com.example.springbestpractice.application.comment.dto.CommentCreateRequest;
+import com.example.springbestpractice.application.comment.dto.CommentResponse;
+import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
 import com.example.springbestpractice.domain.comment.CommentNotFoundException;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import org.junit.jupiter.api.DisplayName;

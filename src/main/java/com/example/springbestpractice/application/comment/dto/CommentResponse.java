@@ -1,4 +1,4 @@
-package com.example.springbestpractice.api.comment.dto;
+package com.example.springbestpractice.application.comment.dto;
 
 import com.example.springbestpractice.domain.comment.Comment;
 

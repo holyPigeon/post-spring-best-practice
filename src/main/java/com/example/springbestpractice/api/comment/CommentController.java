@@ -1,9 +1,9 @@
 package com.example.springbestpractice.api.comment;
 
-import com.example.springbestpractice.api.comment.dto.CommentCreateRequest;
-import com.example.springbestpractice.api.comment.dto.CommentResponse;
-import com.example.springbestpractice.api.comment.dto.CommentUpdateRequest;
 import com.example.springbestpractice.application.comment.CommentService;
+import com.example.springbestpractice.application.comment.dto.CommentCreateRequest;
+import com.example.springbestpractice.application.comment.dto.CommentResponse;
+import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

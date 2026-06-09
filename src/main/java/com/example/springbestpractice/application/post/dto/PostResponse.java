@@ -1,4 +1,4 @@
-package com.example.springbestpractice.api.post.dto;
+package com.example.springbestpractice.application.post.dto;
 
 import com.example.springbestpractice.domain.post.Post;
 

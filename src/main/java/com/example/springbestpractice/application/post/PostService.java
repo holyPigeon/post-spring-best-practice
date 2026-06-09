@@ -1,8 +1,8 @@
 package com.example.springbestpractice.application.post;
 
-import com.example.springbestpractice.api.post.dto.PostCreateRequest;
-import com.example.springbestpractice.api.post.dto.PostResponse;
-import com.example.springbestpractice.api.post.dto.PostUpdateRequest;
+import com.example.springbestpractice.application.post.dto.PostCreateRequest;
+import com.example.springbestpractice.application.post.dto.PostResponse;
+import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;

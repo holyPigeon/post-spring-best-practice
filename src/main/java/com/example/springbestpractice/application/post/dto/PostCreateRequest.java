@@ -1,4 +1,4 @@
-package com.example.springbestpractice.api.post.dto;
+package com.example.springbestpractice.application.post.dto;
 
 public record PostCreateRequest(String title, String content, String author) {
 }

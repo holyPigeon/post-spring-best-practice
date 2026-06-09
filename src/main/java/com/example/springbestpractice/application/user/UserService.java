@@ -1,9 +1,9 @@
 package com.example.springbestpractice.application.user;
 
-import com.example.springbestpractice.api.user.dto.UserCreateRequest;
-import com.example.springbestpractice.api.user.dto.UserPasswordUpdateRequest;
-import com.example.springbestpractice.api.user.dto.UserResponse;
-import com.example.springbestpractice.api.user.dto.UserUpdateRequest;
+import com.example.springbestpractice.application.user.dto.UserCreateRequest;
+import com.example.springbestpractice.application.user.dto.UserPasswordUpdateRequest;
+import com.example.springbestpractice.application.user.dto.UserResponse;
+import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
