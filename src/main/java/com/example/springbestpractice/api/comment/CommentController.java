@@ -4,6 +4,7 @@ import com.example.springbestpractice.application.comment.CommentService;
 import com.example.springbestpractice.application.comment.dto.CommentCreateRequest;
 import com.example.springbestpractice.application.comment.dto.CommentResponse;
 import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<CommentResponse> createComment(
             @PathVariable Long postId,
-            @RequestBody CommentCreateRequest request
+            @Valid @RequestBody CommentCreateRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commentService.createComment(postId, request));
     }
@@ -48,7 +49,7 @@ public class CommentController {
     public CommentResponse updateComment(
             @PathVariable Long postId,
             @PathVariable Long commentId,
-            @RequestBody CommentUpdateRequest request
+            @Valid @RequestBody CommentUpdateRequest request
     ) {
         return commentService.updateComment(postId, commentId, request);
     }

@@ -5,6 +5,7 @@ import com.example.springbestpractice.application.user.dto.UserCreateRequest;
 import com.example.springbestpractice.application.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.application.user.dto.UserResponse;
 import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody UserCreateRequest request) {
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
     }
 
@@ -35,13 +36,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public UserResponse updateUser(@PathVariable Long id, @RequestBody UserUpdateRequest request) {
+    public UserResponse updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) {
         return userService.updateUser(id, request);
     }
 
     @PatchMapping("/{id}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updatePassword(@PathVariable Long id, @RequestBody UserPasswordUpdateRequest request) {
+    public void updatePassword(@PathVariable Long id, @Valid @RequestBody UserPasswordUpdateRequest request) {
         userService.updatePassword(id, request);
     }
 

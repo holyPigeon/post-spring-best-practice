@@ -38,14 +38,21 @@ public class Post {
 
     public static Post create(String title, String content, String author) {
         return Post.builder()
-                .title(title)
-                .content(content)
-                .author(author)
+                .title(requireNotBlank(title, "제목은 필수입니다."))
+                .content(requireNotBlank(content, "내용은 필수입니다."))
+                .author(requireNotBlank(author, "작성자는 필수입니다."))
                 .build();
     }
 
     public void update(String title, String content) {
-        this.title = title;
-        this.content = content;
+        this.title = requireNotBlank(title, "제목은 필수입니다.");
+        this.content = requireNotBlank(content, "내용은 필수입니다.");
+    }
+
+    private static String requireNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
     }
 }

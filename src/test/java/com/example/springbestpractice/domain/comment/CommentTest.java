@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("댓글 도메인")
 class CommentTest {
@@ -28,6 +29,14 @@ class CommentTest {
                     .extracting("post", "content", "author")
                     .containsExactly(post, "댓글 내용", "댓글 작성자");
         }
+
+        @Test
+        @DisplayName("게시글이 없으면 예외를 던진다")
+        void throwExceptionWhenPostNull() {
+            assertThatThrownBy(() -> Comment.create(null, "댓글 내용", "댓글 작성자"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("게시글은 필수입니다.");
+        }
     }
 
     @Nested
@@ -46,6 +55,19 @@ class CommentTest {
 
             // then
             assertThat(comment.getContent()).isEqualTo("새 댓글 내용");
+        }
+
+        @Test
+        @DisplayName("내용이 비어 있으면 예외를 던진다")
+        void throwExceptionWhenContentBlank() {
+            // given
+            Post post = Post.create("제목", "내용", "작성자");
+            Comment comment = Comment.create(post, "댓글 내용", "댓글 작성자");
+
+            // when & then
+            assertThatThrownBy(() -> comment.updateContent(" "))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("댓글 내용은 필수입니다.");
         }
     }
 }

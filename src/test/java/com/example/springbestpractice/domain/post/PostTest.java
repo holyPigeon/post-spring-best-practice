@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("게시글 도메인")
 class PostTest {
@@ -23,6 +24,14 @@ class PostTest {
             assertThat(post)
                     .extracting("title", "content", "author")
                     .containsExactly("제목", "내용", "작성자");
+        }
+
+        @Test
+        @DisplayName("제목이 비어 있으면 예외를 던진다")
+        void throwExceptionWhenTitleBlank() {
+            assertThatThrownBy(() -> Post.create(" ", "내용", "작성자"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("제목은 필수입니다.");
         }
     }
 
@@ -43,6 +52,18 @@ class PostTest {
             assertThat(post)
                     .extracting("title", "content")
                     .containsExactly("새제목", "새내용");
+        }
+
+        @Test
+        @DisplayName("내용이 비어 있으면 예외를 던진다")
+        void throwExceptionWhenContentBlank() {
+            // given
+            Post post = Post.create("제목", "내용", "작성자");
+
+            // when & then
+            assertThatThrownBy(() -> post.update("새제목", " "))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("내용은 필수입니다.");
         }
     }
 }

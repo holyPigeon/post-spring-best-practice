@@ -32,13 +32,34 @@ public class RefreshToken {
 
     public static RefreshToken create(Long userId, String token, long expirationMillis) {
         return RefreshToken.builder()
-                .userId(userId)
-                .token(token)
-                .expiresAt(LocalDateTime.now().plusNanos(expirationMillis * 1_000_000L))
+                .userId(requireUserId(userId))
+                .token(requireNotBlank(token, "리프레시 토큰은 필수입니다."))
+                .expiresAt(LocalDateTime.now().plusNanos(requirePositiveExpiration(expirationMillis) * 1_000_000L))
                 .build();
     }
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    private static Long requireUserId(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("유저 ID는 필수입니다.");
+        }
+        return userId;
+    }
+
+    private static String requireNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
+    }
+
+    private static long requirePositiveExpiration(long expirationMillis) {
+        if (expirationMillis <= 0) {
+            throw new IllegalArgumentException("만료 시간은 0보다 커야 합니다.");
+        }
+        return expirationMillis;
     }
 }

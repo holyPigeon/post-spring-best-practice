@@ -75,6 +75,20 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/users - 이메일 형식이 잘못되면 400을 반환한다")
+    void createUserInvalidEmail() throws Exception {
+        // given
+        UserCreateRequest request = new UserCreateRequest("invalid-email", "테스터", "password");
+
+        // when & then
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("이메일 형식이 올바르지 않습니다."));
+    }
+
+    @Test
     @DisplayName("GET /api/users - 200과 유저 목록을 반환한다")
     void getAllUsers() throws Exception {
         // given

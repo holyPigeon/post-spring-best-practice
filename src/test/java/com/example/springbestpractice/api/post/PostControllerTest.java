@@ -58,6 +58,20 @@ class PostControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/posts - 제목이 비어 있으면 400을 반환한다")
+    void createPostBlankTitle() throws Exception {
+        // given
+        PostCreateRequest request = new PostCreateRequest(" ", "내용", "작성자");
+
+        // when & then
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("제목은 필수입니다."));
+    }
+
+    @Test
     @DisplayName("GET /api/posts - 200과 게시글 목록을 반환한다")
     void getAllPosts() throws Exception {
         // given

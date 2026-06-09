@@ -107,6 +107,20 @@ class AuthControllerTest {
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.message").value("이메일 또는 비밀번호가 올바르지 않습니다."));
         }
+
+        @Test
+        @DisplayName("이메일 형식이 잘못되면 400을 반환한다")
+        void loginInvalidEmail() throws Exception {
+            // given
+            LoginRequest request = new LoginRequest("invalid-email", "password");
+
+            // when & then
+            mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("이메일 형식이 올바르지 않습니다."));
+        }
     }
 
     @Nested

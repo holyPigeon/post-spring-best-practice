@@ -52,13 +52,27 @@ public class Comment {
 
     public static Comment create(Post post, String content, String author) {
         return Comment.builder()
-                .post(post)
-                .content(content)
-                .author(author)
+                .post(requirePost(post))
+                .content(requireNotBlank(content, "댓글 내용은 필수입니다."))
+                .author(requireNotBlank(author, "작성자는 필수입니다."))
                 .build();
     }
 
     public void updateContent(String content) {
-        this.content = content;
+        this.content = requireNotBlank(content, "댓글 내용은 필수입니다.");
+    }
+
+    private static Post requirePost(Post post) {
+        if (post == null) {
+            throw new IllegalArgumentException("게시글은 필수입니다.");
+        }
+        return post;
+    }
+
+    private static String requireNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
     }
 }

@@ -39,17 +39,24 @@ public class User {
 
     public static User create(String email, String nickname, String password) {
         return User.builder()
-                .email(email)
-                .nickname(nickname)
-                .password(password)
+                .email(requireNotBlank(email, "이메일은 필수입니다."))
+                .nickname(requireNotBlank(nickname, "닉네임은 필수입니다."))
+                .password(requireNotBlank(password, "비밀번호는 필수입니다."))
                 .build();
     }
 
     public void updateNickname(String nickname) {
-        this.nickname = nickname;
+        this.nickname = requireNotBlank(nickname, "닉네임은 필수입니다.");
     }
 
     public void updatePassword(String password) {
-        this.password = password;
+        this.password = requireNotBlank(password, "비밀번호는 필수입니다.");
+    }
+
+    private static String requireNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
     }
 }

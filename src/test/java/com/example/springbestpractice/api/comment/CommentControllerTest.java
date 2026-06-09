@@ -64,6 +64,20 @@ class CommentControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/posts/{postId}/comments - 내용이 비어 있으면 400을 반환한다")
+    void createCommentBlankContent() throws Exception {
+        // given
+        CommentCreateRequest request = new CommentCreateRequest(" ", "댓글 작성자");
+
+        // when & then
+        mockMvc.perform(post("/api/posts/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("댓글 내용은 필수입니다."));
+    }
+
+    @Test
     @DisplayName("GET /api/posts/{postId}/comments - 200과 댓글 목록을 반환한다")
     void getComments() throws Exception {
         // given

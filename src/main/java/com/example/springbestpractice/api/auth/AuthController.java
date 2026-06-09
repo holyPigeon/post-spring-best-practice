@@ -6,6 +6,7 @@ import com.example.springbestpractice.application.auth.dto.RefreshRequest;
 import com.example.springbestpractice.application.auth.dto.TokenResponse;
 import com.example.springbestpractice.common.annotation.CurrentUser;
 import com.example.springbestpractice.common.model.LoginUser;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,18 +24,18 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public TokenResponse login(@RequestBody LoginRequest request) {
+    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
 
     @PostMapping("/refresh")
-    public TokenResponse refresh(@RequestBody RefreshRequest request) {
+    public TokenResponse refresh(@Valid @RequestBody RefreshRequest request) {
         return authService.refresh(request);
     }
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(@RequestBody RefreshRequest request) {
+    public void logout(@Valid @RequestBody RefreshRequest request) {
         authService.logout(request);
     }
 
