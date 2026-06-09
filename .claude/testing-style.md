@@ -10,7 +10,7 @@
 | 대상 | 어노테이션 | Mock | Spring Context |
 |------|-----------|------|---------------|
 | Service · Domain | `@ExtendWith(MockitoExtension.class)` | `@Mock` / `@InjectMocks` | 없음 (빠름) |
-| Controller | `@WebMvcTest(XxxController.class)` | `@MockBean` | Slice |
+| Controller | `@WebMvcTest(XxxController.class)` | `@MockitoBean` | Slice |
 | Repository | `@DataJpaTest` | 없음 (H2 실사용) | Slice |
 | 전체 플로우 | `@SpringBootTest` | 최소화 | Full (느림, 예외적) |
 
@@ -73,8 +73,8 @@ void createPost() {
     PostResponse result = postService.create(request);  // 단 한 줄
 
     // then
-    assertThat(result.getId()).isEqualTo(1L);
-    assertThat(result.getTitle()).isEqualTo("제목");
+    assertThat(result.id()).isEqualTo(1L);
+    assertThat(result.title()).isEqualTo("제목");
     verify(postRepository).save(any(Post.class));       // verify는 then 마지막에
 }
 ```
@@ -114,8 +114,12 @@ verify(userRepository).findById(1L);              // ❌ 이미 stubbing한 것 
 | 테스트 계층 | Mock 방식 |
 |-----------|---------|
 | Service (순수 단위) | `@Mock` — Spring 없이 |
-| `@WebMvcTest` 컨트롤러 | `@MockBean` — Spring 빈 교체 |
+| `@WebMvcTest` 컨트롤러 | `@MockitoBean` — Spring 빈 교체 |
 | `@DataJpaTest` 쿼리 | Mock 없이 H2 실사용 |
+
+Spring Boot 4에서는 컨트롤러 슬라이스 테스트의 Spring 빈 교체에
+`org.springframework.test.context.bean.override.mockito.MockitoBean`을 사용한다.
+이 프로젝트에서는 deprecated/removed될 수 있는 `@MockBean`을 새로 추가하지 않는다.
 
 ---
 
@@ -247,7 +251,7 @@ class UserControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
-    @MockBean UserService userService;
+    @MockitoBean UserService userService;
 
     @Test
     @DisplayName("POST /users - 201과 생성된 유저를 반환한다")

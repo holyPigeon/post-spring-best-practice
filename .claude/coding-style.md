@@ -4,11 +4,11 @@ Base: Toss backend style. Scale: small project, multi-module migration planned.
 
 ## Package Structure
 ```
-api/{domain}/          Controller, Request/Response DTO
-application/{domain}/  Service (use case orchestration)
-domain/{domain}/       Entity, domain exceptions
+api/{domain}/            Controller
+application/{domain}/    Service (use case orchestration), Request/Response DTO
+domain/{domain}/         Entity, domain exceptions
 infrastructure/{domain}/ JPA Repository
-common/exception/      GlobalExceptionHandler
+common/exception/        GlobalExceptionHandler
 ```
 Dependency direction (never reverse): `api → application → domain`, `infrastructure → domain`, all → `common`
 
@@ -34,6 +34,7 @@ public void confirm() {
 
 ## DTO Rules
 - Request/Response: Java `record`
+- Small-project default: keep request/response DTOs under `application/{domain}/dto` so `application` never depends on `api`
 - `XxxResponse.from(Entity)` static factory in Response record
 - Never return Entity from Controller
 
@@ -66,8 +67,8 @@ Prefer Spring REST Docs over Swagger annotations.
 
 ## Multi-module Target Structure (reference only)
 ```
--api            Controller, Request/Response DTO
--application    Service (use case orchestration)
+-api            Controller
+-application    Service (use case orchestration), current shared Request/Response DTO
 -domain         Entity, domain exceptions — NO Spring/JPA deps
 -infrastructure JPA Repository, external APIs
 -common         GlobalExceptionHandler, shared utilities

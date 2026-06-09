@@ -72,7 +72,8 @@ Test slices: `@WebMvcTest` (controller), `@DataJpaTest` (repository)
 
 - **Spring Boot 4.0.6**, Java 21, Gradle
 - **spring-boot-starter-webmvc** — Spring MVC (synchronous, servlet-based; not reactive WebFlux)
-- **spring-boot-starter-data-jpa** + H2 runtime — JPA with in-memory H2 database
+- **spring-boot-starter-data-jpa** + MySQL runtime — local/prod runtime database
+- **H2** — test runtime only for repository/data slice tests
 - **Lombok** — annotationProcessor wired for both main and test
 
 ## Architecture
@@ -97,4 +98,9 @@ com.example.springbestpractice/
 
 ## Database
 
-H2 in-memory, 별도 datasource 설정 불필요. 콘솔: `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:testdb`)
+기본 실행 프로파일은 `local`이며 MySQL을 사용한다. 로컬 실행 시 `docker compose up --build`로 MySQL과 애플리케이션을 함께 띄우거나, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`를 직접 지정한다.
+
+- local 기본 JDBC URL: `jdbc:mysql://localhost:3306/spring_best_practice`
+- Docker Compose 내부 JDBC URL: `jdbc:mysql://mysql:3306/spring_best_practice`
+- test runtime: H2 in-memory
+- prod 기본 DDL 전략: `validate`

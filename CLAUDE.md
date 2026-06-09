@@ -12,6 +12,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Task Routing
+
+`CLAUDE.md`는 Claude Code의 루트 라우터 문서다. 작업을 시작할 때 아래 규칙에 따라 필요한 `.claude` 문서를 먼저 확인하고, 해당 문서의 세부 규칙을 현재 작업에 적용한다.
+
+| 작업 유형 | 반드시 참고할 문서 |
+|---|---|
+| Java/Spring 코드 작성, 수정, 리팩토링, 패키지 이동 | `.claude/coding-style.md` |
+| 테스트 작성, 테스트 수정, 테스트 실패 분석 | `.claude/testing-style.md` |
+| 커밋 메시지 작성, 커밋 생성, 변경사항 요약 | `.claude/commit-convention.md` |
+
+여러 작업 유형이 동시에 해당하면 관련 문서를 모두 참고한다. 예를 들어 기능 구현과 테스트 추가를 함께 수행하면 `.claude/coding-style.md`와 `.claude/testing-style.md`를 모두 확인한다.
+
+문서 간 우선순위는 다음과 같다.
+
+1. 사용자 요청
+2. `CLAUDE.md`의 필수 환경/아키텍처 규칙
+3. 작업 유형별 `.claude/*.md` 세부 규칙
+4. 기존 코드베이스의 일관성
+
+`.Codex` 문서는 Codex 전용 작업 규칙이다. Claude Code 작업 중 두 문서가 충돌하면 `.claude` 문서를 우선하되, 장기적으로 두 문서의 내용은 동일한 설계 의도를 유지해야 한다.
+
+---
+
 ## Java 환경 (필수)
 
 시스템 기본 JVM이 Java 8로 잡혀 있어 Gradle 실행 시 실패한다. **모든 Gradle 명령 전에 반드시 JAVA_HOME을 Zulu 21로 지정해야 한다.**
@@ -49,7 +72,8 @@ Test slices: `@WebMvcTest` (controller), `@DataJpaTest` (repository)
 
 - **Spring Boot 4.0.6**, Java 21, Gradle
 - **spring-boot-starter-webmvc** — Spring MVC (synchronous, servlet-based; not reactive WebFlux)
-- **spring-boot-starter-data-jpa** + H2 runtime — JPA with in-memory H2 database
+- **spring-boot-starter-data-jpa** + MySQL runtime — local/prod runtime database
+- **H2** — test runtime only for repository/data slice tests
 - **Lombok** — annotationProcessor wired for both main and test
 
 ## Architecture
@@ -58,10 +82,10 @@ Test slices: `@WebMvcTest` (controller), `@DataJpaTest` (repository)
 
 ```
 com.example.springbestpractice/
-├── api/             # presentation: controller + 요청/응답 DTO
-│   └── {domain}/{Controller, dto/}
-├── application/     # use case: service
-│   └── {domain}/
+├── api/             # presentation: controller
+│   └── {domain}/{Controller}
+├── application/     # use case: service + 요청/응답 DTO
+│   └── {domain}/{Service, dto/}
 ├── domain/          # 핵심 도메인: entity, 도메인 예외
 │   └── {domain}/
 ├── infrastructure/  # 기술 세부사항: JPA repository 등
@@ -74,4 +98,9 @@ com.example.springbestpractice/
 
 ## Database
 
-H2 in-memory, 별도 datasource 설정 불필요. 콘솔: `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:testdb`)
+기본 실행 프로파일은 `local`이며 MySQL을 사용한다. 로컬 실행 시 `docker compose up --build`로 MySQL과 애플리케이션을 함께 띄우거나, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`를 직접 지정한다.
+
+- local 기본 JDBC URL: `jdbc:mysql://localhost:3306/spring_best_practice`
+- Docker Compose 내부 JDBC URL: `jdbc:mysql://mysql:3306/spring_best_practice`
+- test runtime: H2 in-memory
+- prod 기본 DDL 전략: `validate`
