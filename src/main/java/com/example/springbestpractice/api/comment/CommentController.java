@@ -1,6 +1,9 @@
 package com.example.springbestpractice.api.comment;
 
 import com.example.springbestpractice.application.comment.CommentService;
+import com.example.springbestpractice.application.comment.command.CommentCreateCommand;
+import com.example.springbestpractice.application.comment.command.CommentDeleteCommand;
+import com.example.springbestpractice.application.comment.command.CommentUpdateCommand;
 import com.example.springbestpractice.application.comment.dto.CommentCreateRequest;
 import com.example.springbestpractice.application.comment.dto.CommentResponse;
 import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
@@ -35,7 +38,8 @@ public class CommentController {
             @Valid @RequestBody CommentCreateRequest request,
             @CurrentUser LoginUser loginUser
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.createComment(postId, request, loginUser));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(commentService.createComment(CommentCreateCommand.from(postId, request, loginUser)));
     }
 
     @GetMapping
@@ -55,7 +59,7 @@ public class CommentController {
             @Valid @RequestBody CommentUpdateRequest request,
             @CurrentUser LoginUser loginUser
     ) {
-        return commentService.updateComment(postId, commentId, request, loginUser);
+        return commentService.updateComment(CommentUpdateCommand.from(postId, commentId, request, loginUser));
     }
 
     @DeleteMapping("/{commentId}")
@@ -65,6 +69,6 @@ public class CommentController {
             @PathVariable Long commentId,
             @CurrentUser LoginUser loginUser
     ) {
-        commentService.deleteComment(postId, commentId, loginUser);
+        commentService.deleteComment(CommentDeleteCommand.from(postId, commentId, loginUser));
     }
 }

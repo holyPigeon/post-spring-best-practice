@@ -1,12 +1,13 @@
 package com.example.springbestpractice.application.user;
 
+import com.example.springbestpractice.application.user.command.UserDeleteCommand;
+import com.example.springbestpractice.application.user.command.UserPasswordUpdateCommand;
+import com.example.springbestpractice.application.user.command.UserUpdateCommand;
 import com.example.springbestpractice.application.user.dto.UserCreateRequest;
-import com.example.springbestpractice.application.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.application.user.dto.UserResponse;
-import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
+import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
 import com.example.springbestpractice.infrastructure.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,27 +50,27 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse updateUser(Long id, UserUpdateRequest request, LoginUser loginUser) {
-        validateSelf(id, loginUser);
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
-        user.updateNickname(request.nickname());
+    public UserResponse updateUser(UserUpdateCommand command) {
+        validateSelf(command.id(), command.loginUser());
+        User user = userRepository.findById(command.id())
+                .orElseThrow(() -> new UserNotFoundException(command.id()));
+        user.updateNickname(command.nickname());
         return UserResponse.from(user);
     }
 
     @Transactional
-    public void updatePassword(Long id, UserPasswordUpdateRequest request, LoginUser loginUser) {
-        validateSelf(id, loginUser);
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
-        user.updatePassword(passwordEncoder.encode(request.password()));
+    public void updatePassword(UserPasswordUpdateCommand command) {
+        validateSelf(command.id(), command.loginUser());
+        User user = userRepository.findById(command.id())
+                .orElseThrow(() -> new UserNotFoundException(command.id()));
+        user.updatePassword(passwordEncoder.encode(command.password()));
     }
 
     @Transactional
-    public void deleteUser(Long id, LoginUser loginUser) {
-        validateSelf(id, loginUser);
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+    public void deleteUser(UserDeleteCommand command) {
+        validateSelf(command.id(), command.loginUser());
+        User user = userRepository.findById(command.id())
+                .orElseThrow(() -> new UserNotFoundException(command.id()));
         userRepository.delete(user);
     }
 

@@ -1,8 +1,9 @@
 package com.example.springbestpractice.application.post;
 
-import com.example.springbestpractice.application.post.dto.PostCreateRequest;
+import com.example.springbestpractice.application.post.command.PostCreateCommand;
+import com.example.springbestpractice.application.post.command.PostDeleteCommand;
+import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostResponse;
-import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
@@ -24,9 +25,9 @@ public class PostService {
     private final CommentRepository commentRepository;
 
     @Transactional
-    public PostResponse createPost(PostCreateRequest request, LoginUser loginUser) {
-        LoginUser author = requireLoginUser(loginUser);
-        Post post = Post.create(request.title(), request.content(), author.id(), author.nickname());
+    public PostResponse createPost(PostCreateCommand command) {
+        LoginUser author = requireLoginUser(command.loginUser());
+        Post post = Post.create(command.title(), command.content(), author.id(), author.nickname());
         return PostResponse.from(postRepository.save(post));
     }
 
@@ -42,18 +43,18 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse updatePost(Long id, PostUpdateRequest request, LoginUser loginUser) {
-        Post post = getPostById(id);
-        validateOwner(post, loginUser);
-        post.update(request.title(), request.content());
+    public PostResponse updatePost(PostUpdateCommand command) {
+        Post post = getPostById(command.id());
+        validateOwner(post, command.loginUser());
+        post.update(command.title(), command.content());
         return PostResponse.from(post);
     }
 
     @Transactional
-    public void deletePost(Long id, LoginUser loginUser) {
-        Post post = getPostById(id);
-        validateOwner(post, loginUser);
-        commentRepository.deleteByPostId(id);
+    public void deletePost(PostDeleteCommand command) {
+        Post post = getPostById(command.id());
+        validateOwner(post, command.loginUser());
+        commentRepository.deleteByPostId(command.id());
         postRepository.delete(post);
     }
 

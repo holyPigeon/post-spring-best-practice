@@ -1,6 +1,5 @@
-package com.example.springbestpractice.common.config;
+package com.example.springbestpractice.infrastructure.security;
 
-import com.example.springbestpractice.common.resolver.CurrentUserArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -10,7 +9,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-public class WebMvcConfig implements WebMvcConfigurer {
+public class SecurityWebMvcConfig implements WebMvcConfigurer {
 
     private final CurrentUserArgumentResolver currentUserArgumentResolver;
 

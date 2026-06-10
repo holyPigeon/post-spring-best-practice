@@ -1,6 +1,7 @@
 package com.example.springbestpractice.api.auth;
 
 import com.example.springbestpractice.application.auth.AuthService;
+import com.example.springbestpractice.application.auth.dto.CurrentUserResponse;
 import com.example.springbestpractice.application.auth.dto.LoginRequest;
 import com.example.springbestpractice.application.auth.dto.RefreshRequest;
 import com.example.springbestpractice.application.auth.dto.TokenResponse;
@@ -40,7 +41,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public LoginUser me(@CurrentUser LoginUser loginUser) {
-        return loginUser;
+    public CurrentUserResponse me(@CurrentUser LoginUser loginUser) {
+        return CurrentUserResponse.from(loginUser);
     }
 }

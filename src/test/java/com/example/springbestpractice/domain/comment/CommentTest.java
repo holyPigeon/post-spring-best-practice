@@ -26,7 +26,7 @@ class CommentTest {
 
             // then
             assertThat(comment)
-                    .extracting("post", "content", "authorId", "author")
+                    .extracting("post", "content", "authorId", "authorNickname")
                     .containsExactly(post, "댓글 내용", 2L, "댓글 작성자");
         }
 

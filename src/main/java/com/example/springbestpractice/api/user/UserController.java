@@ -1,6 +1,9 @@
 package com.example.springbestpractice.api.user;
 
 import com.example.springbestpractice.application.user.UserService;
+import com.example.springbestpractice.application.user.command.UserDeleteCommand;
+import com.example.springbestpractice.application.user.command.UserPasswordUpdateCommand;
+import com.example.springbestpractice.application.user.command.UserUpdateCommand;
 import com.example.springbestpractice.application.user.dto.UserCreateRequest;
 import com.example.springbestpractice.application.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.application.user.dto.UserResponse;
@@ -43,7 +46,7 @@ public class UserController {
             @Valid @RequestBody UserUpdateRequest request,
             @CurrentUser LoginUser loginUser
     ) {
-        return userService.updateUser(id, request, loginUser);
+        return userService.updateUser(UserUpdateCommand.from(id, request, loginUser));
     }
 
     @PatchMapping("/{id}/password")
@@ -53,12 +56,12 @@ public class UserController {
             @Valid @RequestBody UserPasswordUpdateRequest request,
             @CurrentUser LoginUser loginUser
     ) {
-        userService.updatePassword(id, request, loginUser);
+        userService.updatePassword(UserPasswordUpdateCommand.from(id, request, loginUser));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id, @CurrentUser LoginUser loginUser) {
-        userService.deleteUser(id, loginUser);
+        userService.deleteUser(UserDeleteCommand.from(id, loginUser));
     }
 }
