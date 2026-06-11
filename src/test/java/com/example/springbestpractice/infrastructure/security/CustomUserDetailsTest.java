@@ -23,7 +23,7 @@ class CustomUserDetailsTest {
     }
 
     @Test
-    @DisplayName("returns ROLE_ADMIN authority for admin user")
+    @DisplayName("returns ROLE_ADMIN and ROLE_USER authorities for admin user")
     void returnAdminAuthority() {
         // given
         CustomUserDetails userDetails = new CustomUserDetails(User.createAdmin("admin@test.com", "admin", "password"));
@@ -31,6 +31,6 @@ class CustomUserDetailsTest {
         // when & then
         assertThat(userDetails.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactly("ROLE_ADMIN");
+                .containsExactly("ROLE_ADMIN", "ROLE_USER");
     }
 }

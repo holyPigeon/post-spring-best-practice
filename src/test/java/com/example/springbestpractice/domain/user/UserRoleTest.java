@@ -33,4 +33,11 @@ class UserRoleTest {
     void returnAuthority() {
         assertThat(UserRole.ADMIN.getAuthority()).isEqualTo("ROLE_ADMIN");
     }
+
+    @Test
+    @DisplayName("admin role includes user authority")
+    void returnAdminAuthorities() {
+        assertThat(UserRole.ADMIN.getAuthorities())
+                .containsExactly("ROLE_ADMIN", "ROLE_USER");
+    }
 }
