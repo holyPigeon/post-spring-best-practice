@@ -1,6 +1,9 @@
 package com.example.springbestpractice.api.post;
 
 import com.example.springbestpractice.application.post.PostService;
+import com.example.springbestpractice.application.post.command.PostCreateCommand;
+import com.example.springbestpractice.application.post.command.PostDeleteCommand;
+import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
@@ -26,7 +29,7 @@ public class PostController {
             @Valid @RequestBody PostCreateRequest request,
             @CurrentUser LoginUser loginUser
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(request, loginUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(PostCreateCommand.from(request, loginUser)));
     }
 
     @GetMapping
@@ -45,12 +48,12 @@ public class PostController {
             @Valid @RequestBody PostUpdateRequest request,
             @CurrentUser LoginUser loginUser
     ) {
-        return postService.updatePost(id, request, loginUser);
+        return postService.updatePost(PostUpdateCommand.from(id, request, loginUser));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePost(@PathVariable Long id, @CurrentUser LoginUser loginUser) {
-        postService.deletePost(id, loginUser);
+        postService.deletePost(PostDeleteCommand.from(id, loginUser));
     }
 }

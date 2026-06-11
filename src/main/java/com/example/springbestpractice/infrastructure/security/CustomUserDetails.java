@@ -1,5 +1,6 @@
 package com.example.springbestpractice.infrastructure.security;
 
+import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.user.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +16,10 @@ public class CustomUserDetails implements UserDetails {
 
     public CustomUserDetails(User user) {
         this.user = user;
+    }
+
+    public LoginUser toLoginUser() {
+        return new LoginUser(user.getId(), user.getEmail(), user.getNickname());
     }
 
     @Override

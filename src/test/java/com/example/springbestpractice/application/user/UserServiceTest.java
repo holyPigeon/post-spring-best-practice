@@ -12,17 +12,18 @@ import com.example.springbestpractice.domain.user.DuplicateEmailException;
 import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
 import com.example.springbestpractice.infrastructure.user.UserRepository;
+import com.example.springbestpractice.support.fixture.UserFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -50,7 +51,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = userWithId(1L);
+        user = UserFixture.userWithId(1L);
         loginUser = loginUser(1L);
     }
 
@@ -86,7 +87,12 @@ class UserServiceTest {
             assertThat(result)
                     .extracting("id", "email", "nickname")
                     .containsExactly(1L, "test@test.com", "tester");
-            verify(userRepository).save(any(User.class));
+
+            ArgumentCaptor<User> savedUser = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(savedUser.capture());
+            assertThat(savedUser.getValue())
+                    .extracting("email", "nickname", "password")
+                    .containsExactly("test@test.com", "tester", "encoded-password");
         }
     }
 
@@ -254,11 +260,5 @@ class UserServiceTest {
 
     private LoginUser loginUser(Long id) {
         return new LoginUser(id, "test@test.com", "tester");
-    }
-
-    private User userWithId(Long id) {
-        User user = User.create("test@test.com", "tester", "password");
-        ReflectionTestUtils.setField(user, "id", id);
-        return user;
     }
 }

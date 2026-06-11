@@ -8,12 +8,12 @@ import com.example.springbestpractice.application.user.dto.UserCreateRequest;
 import com.example.springbestpractice.application.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.application.user.dto.UserResponse;
 import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
-import com.example.springbestpractice.common.config.WebMvcConfig;
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.common.resolver.CurrentUserArgumentResolver;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
-import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
+import com.example.springbestpractice.infrastructure.security.CurrentUserArgumentResolver;
+import com.example.springbestpractice.infrastructure.security.SecurityWebMvcConfig;
+import com.example.springbestpractice.support.fixture.UserFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +25,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
@@ -42,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@Import({CurrentUserArgumentResolver.class, WebMvcConfig.class})
+@Import({CurrentUserArgumentResolver.class, SecurityWebMvcConfig.class})
 @DisplayName("User API")
 class UserControllerTest {
 
@@ -57,7 +56,7 @@ class UserControllerTest {
 
     @BeforeEach
     void setSecurityContext() {
-        CustomUserDetails userDetails = new CustomUserDetails(userWithId(1L));
+        CustomUserDetails userDetails = new CustomUserDetails(UserFixture.userWithId(1L));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
         );
@@ -167,11 +166,5 @@ class UserControllerTest {
 
     private LoginUser loginUser() {
         return new LoginUser(1L, "test@test.com", "tester");
-    }
-
-    private User userWithId(Long id) {
-        User user = User.create("test@test.com", "tester", "password");
-        ReflectionTestUtils.setField(user, "id", id);
-        return user;
     }
 }

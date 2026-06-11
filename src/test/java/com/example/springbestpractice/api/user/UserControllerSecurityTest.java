@@ -2,14 +2,15 @@ package com.example.springbestpractice.api.user;
 
 import com.example.springbestpractice.application.user.UserService;
 import com.example.springbestpractice.application.user.dto.UserResponse;
-import com.example.springbestpractice.common.config.WebMvcConfig;
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.common.resolver.CurrentUserArgumentResolver;
 import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetailsService;
+import com.example.springbestpractice.infrastructure.security.CurrentUserArgumentResolver;
 import com.example.springbestpractice.infrastructure.security.JwtTokenProvider;
 import com.example.springbestpractice.infrastructure.security.SecurityConfig;
+import com.example.springbestpractice.infrastructure.security.SecurityWebMvcConfig;
+import com.example.springbestpractice.support.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.BDDMockito.given;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@Import({SecurityConfig.class, CurrentUserArgumentResolver.class, WebMvcConfig.class})
+@Import({SecurityConfig.class, CurrentUserArgumentResolver.class, SecurityWebMvcConfig.class})
 @DisplayName("User API security")
 class UserControllerSecurityTest {
 
@@ -47,7 +47,7 @@ class UserControllerSecurityTest {
     @DisplayName("GET /api/users/me allows regular user")
     void allowRegularUser() throws Exception {
         // given
-        User user = userWithId(1L);
+        User user = UserFixture.userWithId(1L, "user@test.com", "user", "password");
         given(userService.getMyProfile(new LoginUser(1L, "user@test.com", "user")))
                 .willReturn(new UserResponse(1L, "user@test.com", "user", null, null));
 
@@ -60,7 +60,7 @@ class UserControllerSecurityTest {
     @DisplayName("GET /api/users/me allows admin user")
     void allowAdminUser() throws Exception {
         // given
-        User admin = adminWithId(2L);
+        User admin = UserFixture.adminWithId(2L);
         given(userService.getMyProfile(new LoginUser(2L, "admin@test.com", "admin")))
                 .willReturn(new UserResponse(2L, "admin@test.com", "admin", null, null));
 
@@ -79,17 +79,5 @@ class UserControllerSecurityTest {
     private Authentication authToken(User user) {
         CustomUserDetails userDetails = new CustomUserDetails(user);
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-    }
-
-    private User userWithId(Long id) {
-        User user = User.create("user@test.com", "user", "password");
-        ReflectionTestUtils.setField(user, "id", id);
-        return user;
-    }
-
-    private User adminWithId(Long id) {
-        User admin = User.createAdmin("admin@test.com", "admin", "password");
-        ReflectionTestUtils.setField(admin, "id", id);
-        return admin;
     }
 }

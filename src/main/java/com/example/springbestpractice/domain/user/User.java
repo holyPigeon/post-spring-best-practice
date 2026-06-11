@@ -10,8 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -23,9 +21,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
 public class User {
 
@@ -42,7 +38,6 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role = UserRole.USER;
@@ -54,21 +49,19 @@ public class User {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    private User(String email, String nickname, String password, UserRole role) {
+        this.email = requireNotBlank(email, "이메일은 필수입니다.");
+        this.nickname = requireNotBlank(nickname, "닉네임은 필수입니다.");
+        this.password = requireNotBlank(password, "비밀번호는 필수입니다.");
+        this.role = requireRole(role);
+    }
+
     public static User create(String email, String nickname, String password) {
-        return create(email, nickname, password, UserRole.USER);
+        return new User(email, nickname, password, UserRole.USER);
     }
 
     public static User createAdmin(String email, String nickname, String password) {
-        return create(email, nickname, password, UserRole.ADMIN);
-    }
-
-    private static User create(String email, String nickname, String password, UserRole role) {
-        return User.builder()
-                .email(requireNotBlank(email, "이메일은 필수입니다."))
-                .nickname(requireNotBlank(nickname, "닉네임은 필수입니다."))
-                .password(requireNotBlank(password, "비밀번호는 필수입니다."))
-                .role(requireRole(role))
-                .build();
+        return new User(email, nickname, password, UserRole.ADMIN);
     }
 
     public void updateNickname(String nickname) {

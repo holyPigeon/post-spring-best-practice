@@ -1,7 +1,14 @@
 package com.example.springbestpractice.domain.post;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -10,9 +17,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
 public class Post {
 
@@ -29,8 +34,8 @@ public class Post {
     @Column(nullable = false, updatable = false)
     private Long authorId;
 
-    @Column(nullable = false)
-    private String author;
+    @Column(name = "author", nullable = false)
+    private String authorNickname;
 
     @CreatedDate
     @Column(updatable = false)
@@ -39,13 +44,15 @@ public class Post {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public static Post create(String title, String content, Long authorId, String author) {
-        return Post.builder()
-                .title(requireNotBlank(title, "제목은 필수입니다."))
-                .content(requireNotBlank(content, "내용은 필수입니다."))
-                .authorId(requireAuthorId(authorId))
-                .author(requireNotBlank(author, "작성자는 필수입니다."))
-                .build();
+    private Post(String title, String content, Long authorId, String authorNickname) {
+        this.title = requireNotBlank(title, "제목은 필수입니다.");
+        this.content = requireNotBlank(content, "내용은 필수입니다.");
+        this.authorId = requireAuthorId(authorId);
+        this.authorNickname = requireNotBlank(authorNickname, "작성자는 필수입니다.");
+    }
+
+    public static Post create(String title, String content, Long authorId, String authorNickname) {
+        return new Post(title, content, authorId, authorNickname);
     }
 
     public void update(String title, String content) {

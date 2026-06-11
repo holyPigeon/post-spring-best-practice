@@ -1,8 +1,9 @@
 package com.example.springbestpractice.application.comment;
 
-import com.example.springbestpractice.application.comment.dto.CommentCreateRequest;
+import com.example.springbestpractice.application.comment.command.CommentCreateCommand;
+import com.example.springbestpractice.application.comment.command.CommentDeleteCommand;
+import com.example.springbestpractice.application.comment.command.CommentUpdateCommand;
 import com.example.springbestpractice.application.comment.dto.CommentResponse;
-import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.comment.Comment;
 import com.example.springbestpractice.domain.comment.CommentNotFoundException;
@@ -26,10 +27,10 @@ public class CommentService {
     private final PostRepository postRepository;
 
     @Transactional
-    public CommentResponse createComment(Long postId, CommentCreateRequest request, LoginUser loginUser) {
-        LoginUser author = requireLoginUser(loginUser);
-        Post post = getPost(postId);
-        Comment comment = Comment.create(post, request.content(), author.id(), author.nickname());
+    public CommentResponse createComment(CommentCreateCommand command) {
+        LoginUser author = command.loginUser();
+        Post post = getPost(command.postId());
+        Comment comment = Comment.create(post, command.content(), author.id(), author.nickname());
         return CommentResponse.from(commentRepository.save(comment));
     }
 
@@ -46,19 +47,19 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentResponse updateComment(Long postId, Long commentId, CommentUpdateRequest request, LoginUser loginUser) {
-        validatePostExists(postId);
-        Comment comment = getCommentByPostId(postId, commentId);
-        validateOwner(comment, loginUser);
-        comment.updateContent(request.content());
+    public CommentResponse updateComment(CommentUpdateCommand command) {
+        validatePostExists(command.postId());
+        Comment comment = getCommentByPostId(command.postId(), command.commentId());
+        validateOwner(comment, command.loginUser());
+        comment.updateContent(command.content());
         return CommentResponse.from(comment);
     }
 
     @Transactional
-    public void deleteComment(Long postId, Long commentId, LoginUser loginUser) {
-        validatePostExists(postId);
-        Comment comment = getCommentByPostId(postId, commentId);
-        validateOwner(comment, loginUser);
+    public void deleteComment(CommentDeleteCommand command) {
+        validatePostExists(command.postId());
+        Comment comment = getCommentByPostId(command.postId(), command.commentId());
+        validateOwner(comment, command.loginUser());
         commentRepository.delete(comment);
     }
 
@@ -79,16 +80,8 @@ public class CommentService {
     }
 
     private void validateOwner(Comment comment, LoginUser loginUser) {
-        LoginUser owner = requireLoginUser(loginUser);
-        if (!comment.isWrittenBy(owner.id())) {
+        if (!comment.isWrittenBy(loginUser.id())) {
             throw new AccessDeniedException("댓글 소유자가 아닙니다.");
         }
-    }
-
-    private LoginUser requireLoginUser(LoginUser loginUser) {
-        if (loginUser == null) {
-            throw new AccessDeniedException("인증된 사용자 정보가 필요합니다.");
-        }
-        return loginUser;
     }
 }

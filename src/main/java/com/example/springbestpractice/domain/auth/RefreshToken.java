@@ -1,9 +1,12 @@
 package com.example.springbestpractice.domain.auth;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,9 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "refresh_tokens")
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class RefreshToken {
 
     @Id
@@ -30,12 +31,14 @@ public class RefreshToken {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    private RefreshToken(Long userId, String token, long expirationMillis) {
+        this.userId = requireUserId(userId);
+        this.token = requireNotBlank(token, "리프레시 토큰은 필수입니다.");
+        this.expiresAt = LocalDateTime.now().plusNanos(requirePositiveExpiration(expirationMillis) * 1_000_000L);
+    }
+
     public static RefreshToken create(Long userId, String token, long expirationMillis) {
-        return RefreshToken.builder()
-                .userId(requireUserId(userId))
-                .token(requireNotBlank(token, "리프레시 토큰은 필수입니다."))
-                .expiresAt(LocalDateTime.now().plusNanos(requirePositiveExpiration(expirationMillis) * 1_000_000L))
-                .build();
+        return new RefreshToken(userId, token, expirationMillis);
     }
 
     public boolean isExpired() {
