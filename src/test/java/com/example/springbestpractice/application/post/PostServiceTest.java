@@ -17,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -61,11 +62,14 @@ class PostServiceTest {
         given(postRepository.save(any(Post.class))).willReturn(post);
 
         // when
-        PostResponse result = postService.createPost(PostCreateCommand.from(request, loginUser));
+        postService.createPost(PostCreateCommand.from(request, loginUser));
 
         // then
-        assertThat(result.id()).isEqualTo(1L);
-        verify(postRepository).save(any(Post.class));
+        ArgumentCaptor<Post> savedPost = ArgumentCaptor.forClass(Post.class);
+        verify(postRepository).save(savedPost.capture());
+        assertThat(savedPost.getValue())
+                .extracting("title", "content", "authorId", "authorNickname")
+                .containsExactly("제목", "내용", 1L, "작성자");
     }
 
     @Nested

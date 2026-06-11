@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -81,13 +82,14 @@ class UserServiceTest {
             given(userRepository.save(any(User.class))).willReturn(user);
 
             // when
-            UserResponse result = userService.createUser(request);
+            userService.createUser(request);
 
             // then
-            assertThat(result)
-                    .extracting("id", "email", "nickname")
-                    .containsExactly(1L, "test@test.com", "tester");
-            verify(userRepository).save(any(User.class));
+            ArgumentCaptor<User> savedUser = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(savedUser.capture());
+            assertThat(savedUser.getValue())
+                    .extracting("email", "nickname", "password")
+                    .containsExactly("test@test.com", "테스터", "encoded-password");
         }
     }
 
