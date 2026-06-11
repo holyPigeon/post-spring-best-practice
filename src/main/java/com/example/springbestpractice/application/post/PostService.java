@@ -26,7 +26,7 @@ public class PostService {
 
     @Transactional
     public PostResponse createPost(PostCreateCommand command) {
-        LoginUser author = requireLoginUser(command.loginUser());
+        LoginUser author = command.loginUser();
         Post post = Post.create(command.title(), command.content(), author.id(), author.nickname());
         return PostResponse.from(postRepository.save(post));
     }
@@ -64,16 +64,8 @@ public class PostService {
     }
 
     private void validateOwner(Post post, LoginUser loginUser) {
-        LoginUser owner = requireLoginUser(loginUser);
-        if (!post.isWrittenBy(owner.id())) {
+        if (!post.isWrittenBy(loginUser.id())) {
             throw new AccessDeniedException("게시글 소유자가 아닙니다.");
         }
-    }
-
-    private LoginUser requireLoginUser(LoginUser loginUser) {
-        if (loginUser == null) {
-            throw new AccessDeniedException("인증된 사용자 정보가 필요합니다.");
-        }
-        return loginUser;
     }
 }

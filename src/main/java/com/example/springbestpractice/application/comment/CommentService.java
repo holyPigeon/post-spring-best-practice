@@ -28,7 +28,7 @@ public class CommentService {
 
     @Transactional
     public CommentResponse createComment(CommentCreateCommand command) {
-        LoginUser author = requireLoginUser(command.loginUser());
+        LoginUser author = command.loginUser();
         Post post = getPost(command.postId());
         Comment comment = Comment.create(post, command.content(), author.id(), author.nickname());
         return CommentResponse.from(commentRepository.save(comment));
@@ -80,16 +80,8 @@ public class CommentService {
     }
 
     private void validateOwner(Comment comment, LoginUser loginUser) {
-        LoginUser owner = requireLoginUser(loginUser);
-        if (!comment.isWrittenBy(owner.id())) {
+        if (!comment.isWrittenBy(loginUser.id())) {
             throw new AccessDeniedException("댓글 소유자가 아닙니다.");
         }
-    }
-
-    private LoginUser requireLoginUser(LoginUser loginUser) {
-        if (loginUser == null) {
-            throw new AccessDeniedException("인증된 사용자 정보가 필요합니다.");
-        }
-        return loginUser;
     }
 }
