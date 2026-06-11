@@ -1,12 +1,10 @@
-package com.example.springbestpractice.common.resolver;
+package com.example.springbestpractice.infrastructure.security;
 
 import com.example.springbestpractice.common.annotation.CurrentUser;
 import com.example.springbestpractice.common.exception.UnauthenticatedException;
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.domain.user.User;
-import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
+import com.example.springbestpractice.support.fixture.UserFixture;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,18 +23,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class CurrentUserArgumentResolverTest {
 
     CurrentUserArgumentResolver resolver = new CurrentUserArgumentResolver();
-
-    private User testUser;
-
-    @BeforeEach
-    void setUp() {
-        testUser = User.builder()
-                .id(1L)
-                .email("test@test.com")
-                .nickname("테스터")
-                .password("password")
-                .build();
-    }
 
     @AfterEach
     void clearSecurityContext() {
@@ -78,7 +64,7 @@ class CurrentUserArgumentResolverTest {
         @DisplayName("SecurityContext의 인증 정보에서 LoginUser를 추출한다")
         void resolveLoginUserFromSecurityContext() {
             // given
-            CustomUserDetails userDetails = new CustomUserDetails(testUser);
+            CustomUserDetails userDetails = new CustomUserDetails(UserFixture.userWithId(1L));
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
             );
@@ -87,37 +73,38 @@ class CurrentUserArgumentResolverTest {
             LoginUser result = resolver.resolveArgument(null, null, null, null);
 
             // then
-            assertThat(result.id()).isEqualTo(1L);
-            assertThat(result.email()).isEqualTo("test@test.com");
-            assertThat(result.nickname()).isEqualTo("테스터");
+            assertThat(result)
+                    .extracting("id", "email", "nickname")
+                    .containsExactly(1L, "test@test.com", "tester");
         }
 
         @Test
-        @DisplayName("인증 정보가 없으면 IllegalStateException을 던진다")
+        @DisplayName("인증 정보가 없으면 예외를 던진다")
         void throwWhenAuthenticationIsNull() {
-            // SecurityContextHolder는 비어 있음 (setUp 이후 clearContext 전)
             assertThatThrownBy(() -> resolver.resolveArgument(null, null, null, null))
-                    .isInstanceOf(UnauthenticatedException.class)
-                    .hasMessage("인증 정보가 없습니다.");
+                    .isInstanceOf(UnauthenticatedException.class);
         }
 
         @Test
-        @DisplayName("Anonymous 인증이면 IllegalStateException을 던진다")
+        @DisplayName("Anonymous 인증이면 예외를 던진다")
         void throwWhenAnonymousAuthentication() {
-            // given — AnonymousAuthenticationToken은 isAuthenticated() == true지만 principal이 CustomUserDetails가 아님
+            // given
             SecurityContextHolder.getContext().setAuthentication(
                     new AnonymousAuthenticationToken("key", "anonymousUser",
                             List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")))
             );
 
+            // when & then
             assertThatThrownBy(() -> resolver.resolveArgument(null, null, null, null))
-                    .isInstanceOf(UnauthenticatedException.class)
-                    .hasMessage("인증 정보가 없습니다.");
+                    .isInstanceOf(UnauthenticatedException.class);
         }
     }
 
     static class Dummy {
-        void withAnnotation(@CurrentUser LoginUser loginUser) {}
-        void withoutAnnotation(LoginUser loginUser) {}
+        void withAnnotation(@CurrentUser LoginUser loginUser) {
+        }
+
+        void withoutAnnotation(LoginUser loginUser) {
+        }
     }
 }

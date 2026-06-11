@@ -11,8 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -23,9 +21,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
 public class Comment {
 
@@ -43,8 +39,8 @@ public class Comment {
     @Column(nullable = false, updatable = false)
     private Long authorId;
 
-    @Column(nullable = false)
-    private String author;
+    @Column(name = "author", nullable = false)
+    private String authorNickname;
 
     @CreatedDate
     @Column(updatable = false)
@@ -53,13 +49,15 @@ public class Comment {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public static Comment create(Post post, String content, Long authorId, String author) {
-        return Comment.builder()
-                .post(requirePost(post))
-                .content(requireNotBlank(content, "댓글 내용은 필수입니다."))
-                .authorId(requireAuthorId(authorId))
-                .author(requireNotBlank(author, "작성자는 필수입니다."))
-                .build();
+    private Comment(Post post, String content, Long authorId, String authorNickname) {
+        this.post = requirePost(post);
+        this.content = requireNotBlank(content, "댓글 내용은 필수입니다.");
+        this.authorId = requireAuthorId(authorId);
+        this.authorNickname = requireNotBlank(authorNickname, "작성자는 필수입니다.");
+    }
+
+    public static Comment create(Post post, String content, Long authorId, String authorNickname) {
+        return new Comment(post, content, authorId, authorNickname);
     }
 
     public void updateContent(String content) {

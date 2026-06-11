@@ -1,9 +1,8 @@
-package com.example.springbestpractice.common.resolver;
+package com.example.springbestpractice.infrastructure.security;
 
 import com.example.springbestpractice.common.annotation.CurrentUser;
 import com.example.springbestpractice.common.exception.UnauthenticatedException;
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +33,6 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             throw new UnauthenticatedException();
         }
 
-        return LoginUser.from(userDetails.getUser());
+        return userDetails.toLoginUser();
     }
 }

@@ -17,7 +17,7 @@ public record PostResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                post.getAuthor(),
+                post.getAuthorNickname(),
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

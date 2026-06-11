@@ -22,7 +22,7 @@ class PostTest {
 
             // then
             assertThat(post)
-                    .extracting("title", "content", "authorId", "author")
+                    .extracting("title", "content", "authorId", "authorNickname")
                     .containsExactly("제목", "내용", 1L, "작성자");
         }
 
