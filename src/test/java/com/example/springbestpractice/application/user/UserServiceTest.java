@@ -1,5 +1,8 @@
 package com.example.springbestpractice.application.user;
 
+import com.example.springbestpractice.application.user.command.UserDeleteCommand;
+import com.example.springbestpractice.application.user.command.UserPasswordUpdateCommand;
+import com.example.springbestpractice.application.user.command.UserUpdateCommand;
 import com.example.springbestpractice.application.user.dto.UserCreateRequest;
 import com.example.springbestpractice.application.user.dto.UserPasswordUpdateRequest;
 import com.example.springbestpractice.application.user.dto.UserResponse;
@@ -19,8 +22,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-@DisplayName("유저 서비스")
+@DisplayName("User service")
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -47,37 +50,31 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = User.builder()
-                .id(1L)
-                .email("test@test.com")
-                .nickname("테스터")
-                .password("password")
-                .build();
-        loginUser = new LoginUser(1L, "test@test.com", "테스터");
+        user = userWithId(1L);
+        loginUser = loginUser(1L);
     }
 
     @Nested
-    @DisplayName("유저 생성")
+    @DisplayName("Create user")
     class Create {
 
         @Test
-        @DisplayName("이메일이 중복이면 DuplicateEmailException을 던진다")
+        @DisplayName("throws DuplicateEmailException for duplicate email")
         void throwExceptionWhenDuplicateEmail() {
             // given
-            UserCreateRequest request = new UserCreateRequest("test@test.com", "테스터", "password");
+            UserCreateRequest request = new UserCreateRequest("test@test.com", "tester", "password");
             given(userRepository.existsByEmail("test@test.com")).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> userService.createUser(request))
-                    .isInstanceOf(DuplicateEmailException.class)
-                    .hasMessage("이미 사용 중인 이메일입니다. email=test@test.com");
+                    .isInstanceOf(DuplicateEmailException.class);
         }
 
         @Test
-        @DisplayName("정상 입력이면 유저를 저장하고 UserResponse를 반환한다")
+        @DisplayName("saves and returns a user")
         void createUser() {
             // given
-            UserCreateRequest request = new UserCreateRequest("test@test.com", "테스터", "password");
+            UserCreateRequest request = new UserCreateRequest("test@test.com", "tester", "password");
             given(userRepository.existsByEmail("test@test.com")).willReturn(false);
             given(passwordEncoder.encode("password")).willReturn("encoded-password");
             given(userRepository.save(any(User.class))).willReturn(user);
@@ -86,145 +83,113 @@ class UserServiceTest {
             UserResponse result = userService.createUser(request);
 
             // then
-            assertThat(result.id()).isEqualTo(1L);
-            assertThat(result.email()).isEqualTo("test@test.com");
-            assertThat(result.nickname()).isEqualTo("테스터");
+            assertThat(result)
+                    .extracting("id", "email", "nickname")
+                    .containsExactly(1L, "test@test.com", "tester");
             verify(userRepository).save(any(User.class));
         }
     }
 
     @Nested
-    @DisplayName("유저 단건 조회")
-    class Find {
+    @DisplayName("Get my profile")
+    class GetMyProfile {
 
         @Test
-        @DisplayName("존재하지 않는 ID면 UserNotFoundException을 던진다")
+        @DisplayName("throws UserNotFoundException when current user does not exist")
         void throwExceptionWhenNotFound() {
             // given
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.getUser(999L, loginUser(999L)))
-                    .isInstanceOf(UserNotFoundException.class)
-                    .hasMessage("유저를 찾을 수 없습니다. id=999");
+            assertThatThrownBy(() -> userService.getMyProfile(loginUser(999L)))
+                    .isInstanceOf(UserNotFoundException.class);
         }
 
         @Test
-        @DisplayName("존재하는 ID면 UserResponse를 반환한다")
+        @DisplayName("returns the current user")
         void returnUserResponse() {
             // given
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
-            UserResponse result = userService.getUser(1L, loginUser);
+            UserResponse result = userService.getMyProfile(loginUser);
 
             // then
-            assertThat(result.id()).isEqualTo(1L);
-            assertThat(result.email()).isEqualTo("test@test.com");
+            assertThat(result)
+                    .extracting("id", "email", "nickname")
+                    .containsExactly(1L, "test@test.com", "tester");
         }
 
         @Test
-        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
-        void throwExceptionWhenNotSelf() {
-            assertThatThrownBy(() -> userService.getUser(2L, loginUser))
+        @DisplayName("throws AccessDeniedException when login user is null")
+        void throwExceptionWhenLoginUserIsNull() {
+            assertThatThrownBy(() -> userService.getMyProfile(null))
                     .isInstanceOf(AccessDeniedException.class);
         }
     }
 
     @Nested
-    @DisplayName("유저 전체 조회")
-    class FindAll {
+    @DisplayName("Update my profile")
+    class UpdateMyProfile {
 
         @Test
-        @DisplayName("유저가 없으면 빈 리스트를 반환한다")
-        void returnEmptyList() {
-            // given
-            given(userRepository.findAll()).willReturn(List.of());
-
-            // when
-            List<UserResponse> result = userService.getAllUsers();
-
-            // then
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        @DisplayName("유저가 있으면 전체 목록을 반환한다")
-        void returnAllUsers() {
-            // given
-            User another = User.builder().id(2L).email("other@test.com").nickname("다른유저").password("pw").build();
-            given(userRepository.findAll()).willReturn(List.of(user, another));
-
-            // when
-            List<UserResponse> result = userService.getAllUsers();
-
-            // then
-            assertThat(result).hasSize(2)
-                    .extracting("email")
-                    .containsExactly("test@test.com", "other@test.com");
-        }
-    }
-
-    @Nested
-    @DisplayName("유저 정보 수정")
-    class Update {
-
-        @Test
-        @DisplayName("존재하지 않는 ID면 UserNotFoundException을 던진다")
+        @DisplayName("throws UserNotFoundException when current user does not exist")
         void throwExceptionWhenNotFound() {
             // given
-            UserUpdateRequest request = new UserUpdateRequest("새닉네임");
+            UserUpdateRequest request = new UserUpdateRequest("updated");
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.updateUser(999L, request, loginUser(999L)))
-                    .isInstanceOf(UserNotFoundException.class);
+            assertThatThrownBy(() -> userService.updateMyProfile(
+                    UserUpdateCommand.from(request, loginUser(999L))
+            )).isInstanceOf(UserNotFoundException.class);
         }
 
         @Test
-        @DisplayName("존재하는 ID면 닉네임을 변경하고 반환한다")
+        @DisplayName("updates the current user's nickname")
         void updateNickname() {
             // given
-            UserUpdateRequest request = new UserUpdateRequest("새닉네임");
+            UserUpdateRequest request = new UserUpdateRequest("updated");
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
-            UserResponse result = userService.updateUser(1L, request, loginUser);
+            UserResponse result = userService.updateMyProfile(UserUpdateCommand.from(request, loginUser));
 
             // then
-            assertThat(result.nickname()).isEqualTo("새닉네임");
+            assertThat(result.nickname()).isEqualTo("updated");
         }
 
         @Test
-        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
-        void throwExceptionWhenNotSelf() {
+        @DisplayName("throws AccessDeniedException when login user is null")
+        void throwExceptionWhenLoginUserIsNull() {
             // given
-            UserUpdateRequest request = new UserUpdateRequest("새닉네임");
+            UserUpdateRequest request = new UserUpdateRequest("updated");
 
             // when & then
-            assertThatThrownBy(() -> userService.updateUser(2L, request, loginUser))
+            assertThatThrownBy(() -> userService.updateMyProfile(UserUpdateCommand.from(request, null)))
                     .isInstanceOf(AccessDeniedException.class);
         }
     }
 
     @Nested
-    @DisplayName("비밀번호 변경")
-    class UpdatePassword {
+    @DisplayName("Update my password")
+    class UpdateMyPassword {
 
         @Test
-        @DisplayName("존재하지 않는 ID면 UserNotFoundException을 던진다")
+        @DisplayName("throws UserNotFoundException when current user does not exist")
         void throwExceptionWhenNotFound() {
             // given
             UserPasswordUpdateRequest request = new UserPasswordUpdateRequest("newpassword");
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.updatePassword(999L, request, loginUser(999L)))
-                    .isInstanceOf(UserNotFoundException.class);
+            assertThatThrownBy(() -> userService.updatePassword(
+                    UserPasswordUpdateCommand.from(request, loginUser(999L))
+            )).isInstanceOf(UserNotFoundException.class);
         }
 
         @Test
-        @DisplayName("존재하는 ID면 비밀번호를 인코딩하여 변경한다")
+        @DisplayName("encodes and updates the current user's password")
         void updatePassword() {
             // given
             UserPasswordUpdateRequest request = new UserPasswordUpdateRequest("newpassword");
@@ -232,62 +197,68 @@ class UserServiceTest {
             given(passwordEncoder.encode("newpassword")).willReturn("encoded-newpassword");
 
             // when
-            userService.updatePassword(1L, request, loginUser);
+            userService.updatePassword(UserPasswordUpdateCommand.from(request, loginUser));
 
             // then
-            verify(passwordEncoder).encode("newpassword");
             assertThat(user.getPassword()).isEqualTo("encoded-newpassword");
+            verify(passwordEncoder).encode("newpassword");
         }
 
         @Test
-        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
-        void throwExceptionWhenNotSelf() {
+        @DisplayName("throws AccessDeniedException when login user is null")
+        void throwExceptionWhenLoginUserIsNull() {
             // given
             UserPasswordUpdateRequest request = new UserPasswordUpdateRequest("newpassword");
 
             // when & then
-            assertThatThrownBy(() -> userService.updatePassword(2L, request, loginUser))
+            assertThatThrownBy(() -> userService.updatePassword(UserPasswordUpdateCommand.from(request, null)))
                     .isInstanceOf(AccessDeniedException.class);
         }
     }
 
     @Nested
-    @DisplayName("유저 삭제")
-    class Delete {
+    @DisplayName("Delete my account")
+    class DeleteMyAccount {
 
         @Test
-        @DisplayName("존재하지 않는 ID면 UserNotFoundException을 던진다")
+        @DisplayName("throws UserNotFoundException when current user does not exist")
         void throwExceptionWhenNotFound() {
             // given
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> userService.deleteUser(999L, loginUser(999L)))
+            assertThatThrownBy(() -> userService.deleteMyAccount(UserDeleteCommand.from(loginUser(999L))))
                     .isInstanceOf(UserNotFoundException.class);
         }
 
         @Test
-        @DisplayName("존재하는 ID면 유저를 삭제한다")
-        void deleteUser() {
+        @DisplayName("deletes the current user")
+        void deleteMyAccount() {
             // given
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
-            userService.deleteUser(1L, loginUser);
+            userService.deleteMyAccount(UserDeleteCommand.from(loginUser));
 
             // then
             verify(userRepository).delete(user);
         }
 
         @Test
-        @DisplayName("본인 ID가 아니면 AccessDeniedException을 던진다")
-        void throwExceptionWhenNotSelf() {
-            assertThatThrownBy(() -> userService.deleteUser(2L, loginUser))
+        @DisplayName("throws AccessDeniedException when login user is null")
+        void throwExceptionWhenLoginUserIsNull() {
+            assertThatThrownBy(() -> userService.deleteMyAccount(UserDeleteCommand.from(null)))
                     .isInstanceOf(AccessDeniedException.class);
         }
     }
 
     private LoginUser loginUser(Long id) {
-        return new LoginUser(id, "user" + id + "@test.com", "사용자" + id);
+        return new LoginUser(id, "test@test.com", "tester");
+    }
+
+    private User userWithId(Long id) {
+        User user = User.create("test@test.com", "tester", "password");
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
     }
 }
