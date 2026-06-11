@@ -81,7 +81,7 @@ public class User {
 
     private static UserRole requireRole(UserRole role) {
         if (role == null) {
-            throw new IllegalArgumentException("User role is required.");
+            throw new IllegalArgumentException("사용자 역할은 필수입니다.");
         }
         return role;
     }

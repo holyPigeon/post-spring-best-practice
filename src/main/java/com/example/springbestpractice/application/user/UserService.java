@@ -64,7 +64,7 @@ public class UserService {
 
     private LoginUser requireLoginUser(LoginUser loginUser) {
         if (loginUser == null) {
-            throw new AccessDeniedException("Login user is required.");
+            throw new AccessDeniedException("인증된 사용자 정보가 필요합니다.");
         }
         return loginUser;
     }
