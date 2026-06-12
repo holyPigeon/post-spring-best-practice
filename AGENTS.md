@@ -37,4 +37,4 @@ Priority order:
 3. Task-specific `agent-reference/*.md` rules
 4. Existing codebase consistency
 
-Do not treat `.claude/settings*.json` as Codex work rules.
+Do not treat `.claude/settings*.json` or `docs/*.md` as Codex work rules unless the user explicitly asks to inspect those files.
