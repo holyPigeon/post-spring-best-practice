@@ -4,7 +4,7 @@ Base: Toss backend style. Scale: small project with future multi-module migratio
 
 ## Layer Rules
 
-- Keep the package structure and dependency direction from `agent-reference/project-context.md`.
+- Keep the package structure and dependency direction from `docs/agent/project-context.md`.
 - Controller handles HTTP concerns only. Application service orchestrates use cases. Domain owns business rules. Infrastructure owns persistence and external details.
 - Do not put business logic in `common`.
 
@@ -89,7 +89,7 @@ Service may accept a Request DTO directly only when all conditions are true:
 - Only one controller endpoint calls the use case.
 - The request does not need ownership/security fields.
 
-Introduce an Application Command when any condition above is false. Build it in the controller with a factory such as `PostCreateCommand.from(request, loginUser, postId)`.
+Introduce an Application Command when any condition above is false. Build it in the controller with a factory such as `PostCreateCommand.from(request, loginUser)`.
 
 ## Exception And DI Rules
 

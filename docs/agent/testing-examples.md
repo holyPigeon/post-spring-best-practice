@@ -48,10 +48,11 @@ class UserServiceTest {
 void createPost() {
     // given
     PostCreateRequest request = new PostCreateRequest("제목", "내용");
-    given(postRepository.save(any())).willReturn(PostFixture.postWithId(1L));
+    LoginUser loginUser = new LoginUser(1L, "test@test.com", "테스터");
+    given(postRepository.save(any(Post.class))).willReturn(PostFixture.postWithId(1L));
 
     // when
-    PostResponse result = postService.create(request);
+    PostResponse result = postService.createPost(PostCreateCommand.from(request, loginUser));
 
     // then
     assertThat(result.id()).isEqualTo(1L);
@@ -99,7 +100,7 @@ public final class UserFixture {
     }
 
     public static User user() {
-        return User.create("test@test.com", "테스터", "pw");
+        return User.create("test@test.com", "테스터", "password");
     }
 
     public static User userWithId(Long id) {
@@ -122,16 +123,17 @@ class UserControllerTest {
     @MockitoBean UserService userService;
 
     @Test
-    @DisplayName("POST /users - 201과 생성된 유저를 반환한다")
+    @DisplayName("POST /api/users - 201과 생성된 유저를 반환한다")
     void createUser() throws Exception {
         // given
-        given(userService.create(any()))
-            .willReturn(new UserResponse(1L, "test@test.com"));
+        given(userService.createUser(any()))
+            .willReturn(new UserResponse(1L, "test@test.com", "테스터", null, null));
 
         // when & then
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new UserCreateRequest("test@test.com", "pw"))))
+                .content(objectMapper.writeValueAsString(
+                    new UserCreateRequest("test@test.com", "테스터", "password"))))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1L))
             .andExpect(jsonPath("$.email").value("test@test.com"));
@@ -153,7 +155,7 @@ class UserRepositoryTest {
     @DisplayName("이메일로 유저 존재 여부를 확인한다")
     void existsByEmail() {
         // given
-        em.persist(User.create("test@test.com", "테스터", "pw"));
+        em.persist(User.create("test@test.com", "테스터", "password"));
         em.flush();
 
         // when

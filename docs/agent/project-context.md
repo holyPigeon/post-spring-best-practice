@@ -74,9 +74,16 @@ com.example.springbestpractice/
 
 Dependency direction: `api -> application -> domain`, `infrastructure -> domain`, all layers may depend on `common`. Reverse dependencies are forbidden.
 
-Current intent: keep this project as a layer-first monolith that can be split into modules later. Do not introduce hexagonal architecture or port/adapter packages by default. In this stage, Spring Data repository interfaces may stay in `infrastructure`, and application services may use them directly inside the monolith.
+### Architecture Tiebreaker
 
-Future strict module note: if `application` must compile without depending on `infrastructure` after a Gradle multi-module split, introduce outbound ports/interfaces on the application or domain side and implement them in infrastructure adapters. Do that as an explicit architecture migration, not as incidental cleanup.
+Prefer the current layer-first monolith. Do not introduce hexagonal architecture or port/adapter packages as incidental cleanup.
+
+It is acceptable for application services to use Spring Data repositories from `infrastructure` directly while this project remains a monolith.
+
+Introduce outbound ports/interfaces only when:
+
+- The task is an explicit architecture migration.
+- The project is being split into Gradle modules and `application` must compile without depending on `infrastructure`.
 
 ## Database
 

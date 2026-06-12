@@ -2,7 +2,7 @@
 
 Base: Toss backend testing style. Stack: Java 21, JUnit 5, Mockito, AssertJ.
 
-Use `agent-reference/testing-examples.md` only when concrete examples are needed.
+Use `docs/agent/testing-examples.md` only when concrete examples are needed.
 
 ## Test Layer Selection
 
