@@ -1,6 +1,6 @@
 # 에이전트 참고 문서 운영 가이드
 
-이 문서는 사람이 `AGENTS.md`와 `agent-reference/` 문서 체계를 관리할 때 참고하기 위한 가이드다. 에이전트가 기본 작업 규칙으로 읽지 않도록 `AGENTS.md` 라우팅에서 제외한다.
+이 문서는 사람이 `AGENTS.md`와 `docs/agent/` 문서 체계를 관리할 때 참고하기 위한 가이드다. 에이전트가 기본 작업 규칙으로 읽지 않도록 `AGENTS.md` 라우팅에서 제외한다.
 
 ## 목적
 
@@ -18,14 +18,14 @@
 
 `AGENTS.md`는 라우터다. 실제 규칙을 길게 적지 않고, 어떤 작업에서 어떤 문서를 읽어야 하는지만 알려준다.
 
-`agent-reference/`는 에이전트가 실제로 읽는 규칙 문서 모음이다.
+`docs/agent/`는 에이전트가 실제로 읽는 규칙 문서 모음이다.
 
 - `project-context.md`: 환경, 실행 명령, 아키텍처, DB 같은 프로젝트 전역 맥락
 - `coding-style.md`: Java/Spring 코드 작성과 도메인 모델링 규칙
 - `testing-style.md`: 테스트 작성 원칙과 레이어별 테스트 선택 기준
 - `testing-examples.md`: 필요할 때만 읽는 구체적인 테스트 예시
 - `commit-convention.md`: 커밋 메시지 작성 기준
-- `documentation-style.md`: `AGENTS.md`와 `agent-reference/` 문서를 수정할 때의 문서 작성 기준
+- `documentation-style.md`: `AGENTS.md`와 `docs/agent/` 문서를 수정할 때의 문서 작성 기준
 
 사람만 참고할 설명, 배경 철학, 긴 rationale은 `docs/` 아래에 두되 `AGENTS.md` 라우팅에는 연결하지 않는다.
 
@@ -90,7 +90,7 @@
 
 ## 업데이트 체크리스트
 
-`AGENTS.md`나 `agent-reference/`를 수정할 때는 다음을 확인한다.
+`AGENTS.md`나 `docs/agent/`를 수정할 때는 다음을 확인한다.
 
 - `AGENTS.md`가 라우터 역할만 유지하는가?
 - 새 규칙이 실제 작업에서 필요한 문서에 배치되었는가?

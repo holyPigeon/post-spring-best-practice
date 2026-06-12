@@ -4,7 +4,7 @@ Base: Toss backend style. Scale: small project with future multi-module migratio
 
 ## Layer Rules
 
-- Keep the package structure and dependency direction from `agent-reference/project-context.md`.
+- Keep the package structure and dependency direction from `docs/agent/project-context.md`.
 - Controller handles HTTP concerns only. Application service orchestrates use cases. Domain owns business rules. Infrastructure owns persistence and external details.
 - Do not put business logic in `common`.
 
