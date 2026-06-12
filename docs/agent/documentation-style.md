@@ -18,7 +18,7 @@ Avoid vague instructions such as `clean`, `safe`, `proper`, or `not excessive` u
 
 ## Document Placement
 
-- Keep `AGENTS.md` as a router.
+- Keep `AGENTS.md` and `CLAUDE.md` as routers.
 - Keep task-critical rules in the smallest relevant `docs/agent/*.md` file.
 - Keep long examples in optional example files and route them only when needed.
 - Do not add a new always-read document when a short tiebreaker in an existing routed document is enough.
