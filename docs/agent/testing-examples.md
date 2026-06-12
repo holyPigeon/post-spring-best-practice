@@ -49,7 +49,7 @@ void createPost() {
     // given
     PostCreateRequest request = new PostCreateRequest("제목", "내용");
     LoginUser loginUser = new LoginUser(1L, "test@test.com", "테스터");
-    given(postRepository.save(any())).willReturn(PostFixture.postWithId(1L));
+    given(postRepository.save(any(Post.class))).willReturn(PostFixture.postWithId(1L));
 
     // when
     PostResponse result = postService.createPost(PostCreateCommand.from(request, loginUser));
