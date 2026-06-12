@@ -89,7 +89,7 @@ Service may accept a Request DTO directly only when all conditions are true:
 - Only one controller endpoint calls the use case.
 - The request does not need ownership/security fields.
 
-Introduce an Application Command when any condition above is false. Build it in the controller with a factory such as `PostCreateCommand.from(request, loginUser, postId)`.
+Introduce an Application Command when any condition above is false. Build it in the controller with a factory such as `PostCreateCommand.from(request, loginUser)`.
 
 ## Exception And DI Rules
 

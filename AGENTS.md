@@ -13,6 +13,7 @@ This file provides guidance to Codex (Codex.ai/code) when working in this reposi
 | Testing style | `agent-reference/testing-style.md` |
 | Detailed test examples | `agent-reference/testing-examples.md` |
 | Commit convention | `agent-reference/commit-convention.md` |
+| Agent rule and document writing style | `agent-reference/documentation-style.md` |
 
 ## Task Routing
 
@@ -25,6 +26,7 @@ Before starting a task, read only the documents that match the work.
 | Non-trivial test examples or fixture patterns needed | `agent-reference/testing-examples.md` |
 | Build, run, Gradle, Docker, profile, database work | `agent-reference/project-context.md` |
 | Commit message writing, commit creation, change summary | `agent-reference/commit-convention.md` |
+| Agent rule or `agent-reference/` document updates | `agent-reference/documentation-style.md` |
 
 If multiple task types apply, read all matching documents.
 
