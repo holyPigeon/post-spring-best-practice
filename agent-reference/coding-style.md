@@ -17,6 +17,31 @@ Base: Toss backend style. Scale: small project with future multi-module migratio
 - Add `@Column(nullable = false)` to every non-null field.
 - Validate business invariants inside the entity or domain object, not in the service.
 
+## Defensive Checks And Invariants
+
+Prefer making invalid states unrepresentable over adding defensive checks everywhere.
+
+Do not add redundant null checks when all of these are true:
+
+- The constructor or method is private.
+- The value is not accepted from request DTOs or external input.
+- The value is supplied internally by static factories as a fixed enum or constant.
+- There is no normal application code path that can pass null.
+
+Still validate values from:
+
+- Request DTOs
+- Public methods
+- Persistence hydration assumptions
+- External APIs
+- Message queues
+- Security context
+- Cross-module boundaries
+
+Before adding a defensive check, ask:
+
+> Can this invalid value occur through a normal code path, or should the structure make it impossible?
+
 ## JPA Relationship Rules
 
 - Prefer object relationships when entities collaborate in domain behavior or share the same lifecycle.

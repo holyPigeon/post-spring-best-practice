@@ -3,6 +3,8 @@ package com.example.springbestpractice.domain.user;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,6 +38,10 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role = UserRole.USER;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -43,14 +49,19 @@ public class User {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private User(String email, String nickname, String password) {
+    private User(String email, String nickname, String password, UserRole role) {
         this.email = requireNotBlank(email, "이메일은 필수입니다.");
         this.nickname = requireNotBlank(nickname, "닉네임은 필수입니다.");
         this.password = requireNotBlank(password, "비밀번호는 필수입니다.");
+        this.role = requireRole(role);
     }
 
     public static User create(String email, String nickname, String password) {
-        return new User(email, nickname, password);
+        return new User(email, nickname, password, UserRole.USER);
+    }
+
+    public static User createAdmin(String email, String nickname, String password) {
+        return new User(email, nickname, password, UserRole.ADMIN);
     }
 
     public void updateNickname(String nickname) {
@@ -66,5 +77,12 @@ public class User {
             throw new IllegalArgumentException(message);
         }
         return value;
+    }
+
+    private static UserRole requireRole(UserRole role) {
+        if (role == null) {
+            throw new IllegalArgumentException("사용자 역할은 필수입니다.");
+        }
+        return role;
     }
 }

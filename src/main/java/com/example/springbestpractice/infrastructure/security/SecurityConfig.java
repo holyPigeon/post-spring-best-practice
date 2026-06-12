@@ -20,6 +20,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String[] PUBLIC_URLS = {
+            "/actuator/health",
+            "/actuator/health/**",
+            "/h2-console/**"
+    };
+
+    private static final String[] USER_URLS = {
+            "/api/auth/me",
+            "/api/users/me",
+            "/api/users/me/**",
+            "/api/posts",
+            "/api/posts/**"
+    };
+
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
 
@@ -34,9 +48,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(USER_URLS).hasAnyRole("USER", "ADMIN")
+                        .anyRequest().denyAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

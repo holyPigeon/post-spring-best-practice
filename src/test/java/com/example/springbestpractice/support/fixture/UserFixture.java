@@ -23,4 +23,10 @@ public final class UserFixture {
         ReflectionTestUtils.setField(user, "id", id);
         return user;
     }
+
+    public static User adminWithId(Long id) {
+        User user = User.createAdmin("admin@test.com", "admin", "password");
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
+    }
 }

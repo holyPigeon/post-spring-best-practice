@@ -4,11 +4,10 @@ import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.common.model.LoginUser;
 
 public record UserUpdateCommand(
-        Long id,
         String nickname,
         LoginUser loginUser
 ) {
-    public static UserUpdateCommand from(Long id, UserUpdateRequest request, LoginUser loginUser) {
-        return new UserUpdateCommand(id, request.nickname(), loginUser);
+    public static UserUpdateCommand from(UserUpdateRequest request, LoginUser loginUser) {
+        return new UserUpdateCommand(request.nickname(), loginUser);
     }
 }

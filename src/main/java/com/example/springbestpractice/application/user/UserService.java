@@ -16,9 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,47 +33,39 @@ public class UserService {
         return UserResponse.from(userRepository.save(user));
     }
 
-    public UserResponse getUser(Long id, LoginUser loginUser) {
-        validateSelf(id, loginUser);
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
-        return UserResponse.from(user);
-    }
-
-    public List<UserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(UserResponse::from)
-                .toList();
+    public UserResponse getMyProfile(LoginUser loginUser) {
+        return UserResponse.from(getCurrentUser(loginUser));
     }
 
     @Transactional
-    public UserResponse updateUser(UserUpdateCommand command) {
-        validateSelf(command.id(), command.loginUser());
-        User user = userRepository.findById(command.id())
-                .orElseThrow(() -> new UserNotFoundException(command.id()));
+    public UserResponse updateMyProfile(UserUpdateCommand command) {
+        User user = getCurrentUser(command.loginUser());
         user.updateNickname(command.nickname());
         return UserResponse.from(user);
     }
 
     @Transactional
     public void updatePassword(UserPasswordUpdateCommand command) {
-        validateSelf(command.id(), command.loginUser());
-        User user = userRepository.findById(command.id())
-                .orElseThrow(() -> new UserNotFoundException(command.id()));
+        User user = getCurrentUser(command.loginUser());
         user.updatePassword(passwordEncoder.encode(command.password()));
     }
 
     @Transactional
-    public void deleteUser(UserDeleteCommand command) {
-        validateSelf(command.id(), command.loginUser());
-        User user = userRepository.findById(command.id())
-                .orElseThrow(() -> new UserNotFoundException(command.id()));
+    public void deleteMyAccount(UserDeleteCommand command) {
+        User user = getCurrentUser(command.loginUser());
         userRepository.delete(user);
     }
 
-    private void validateSelf(Long id, LoginUser loginUser) {
-        if (loginUser == null || !Objects.equals(id, loginUser.id())) {
-            throw new AccessDeniedException("본인 리소스만 접근할 수 있습니다.");
+    private User getCurrentUser(LoginUser loginUser) {
+        LoginUser currentUser = requireLoginUser(loginUser);
+        return userRepository.findById(currentUser.id())
+                .orElseThrow(() -> new UserNotFoundException(currentUser.id()));
+    }
+
+    private LoginUser requireLoginUser(LoginUser loginUser) {
+        if (loginUser == null) {
+            throw new AccessDeniedException("인증된 사용자 정보가 필요합니다.");
         }
+        return loginUser;
     }
 }

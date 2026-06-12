@@ -4,11 +4,10 @@ import com.example.springbestpractice.application.user.dto.UserPasswordUpdateReq
 import com.example.springbestpractice.common.model.LoginUser;
 
 public record UserPasswordUpdateCommand(
-        Long id,
         String password,
         LoginUser loginUser
 ) {
-    public static UserPasswordUpdateCommand from(Long id, UserPasswordUpdateRequest request, LoginUser loginUser) {
-        return new UserPasswordUpdateCommand(id, request.password(), loginUser);
+    public static UserPasswordUpdateCommand from(UserPasswordUpdateRequest request, LoginUser loginUser) {
+        return new UserPasswordUpdateCommand(request.password(), loginUser);
     }
 }
