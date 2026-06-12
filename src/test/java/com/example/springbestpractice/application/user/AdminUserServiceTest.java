@@ -5,6 +5,7 @@ import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
 import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.infrastructure.user.UserRepository;
+import com.example.springbestpractice.support.fixture.UserFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,8 +39,8 @@ class AdminUserServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = userWithId(1L);
-        admin = adminWithId(2L);
+        user = UserFixture.userWithId(1L, "user@test.com", "user", "password");
+        admin = UserFixture.adminWithId(2L);
     }
 
     @Nested
@@ -126,15 +126,4 @@ class AdminUserServiceTest {
         }
     }
 
-    private User userWithId(Long id) {
-        User user = User.create("user@test.com", "user", "password");
-        ReflectionTestUtils.setField(user, "id", id);
-        return user;
-    }
-
-    private User adminWithId(Long id) {
-        User admin = User.createAdmin("admin@test.com", "admin", "password");
-        ReflectionTestUtils.setField(admin, "id", id);
-        return admin;
-    }
 }
