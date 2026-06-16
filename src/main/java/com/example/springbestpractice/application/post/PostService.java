@@ -4,17 +4,17 @@ import com.example.springbestpractice.application.post.command.PostCreateCommand
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostResponse;
+import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,10 +36,8 @@ public class PostService {
         return PostResponse.from(post);
     }
 
-    public List<PostResponse> getAllPosts() {
-        return postRepository.findAll().stream()
-                .map(PostResponse::from)
-                .toList();
+    public PageResponse<PostResponse> getPosts(Pageable pageable) {
+        return PageResponse.from(postRepository.findAll(pageable).map(PostResponse::from));
     }
 
     @Transactional
