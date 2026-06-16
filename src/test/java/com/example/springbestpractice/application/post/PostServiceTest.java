@@ -6,6 +6,7 @@ import com.example.springbestpractice.application.post.command.PostUpdateCommand
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
+import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
@@ -21,6 +22,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
@@ -102,19 +106,22 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("게시글이 있으면 전체 목록을 반환한다")
-    void returnAllPosts() {
+    @DisplayName("페이지 요청이면 게시글 페이지를 반환한다")
+    void returnPostPage() {
         // given
         Post another = PostFixture.postWithId(2L, "제목2", "내용2", 2L, "다른작성자");
-        given(postRepository.findAll()).willReturn(List.of(post, another));
+        Pageable pageable = PageRequest.of(0, 20);
+        given(postRepository.findAll(pageable))
+                .willReturn(new PageImpl<>(List.of(post, another), pageable, 2));
 
         // when
-        List<PostResponse> result = postService.getAllPosts();
+        PageResponse<PostResponse> result = postService.getPosts(pageable);
 
         // then
-        assertThat(result).hasSize(2)
+        assertThat(result.content()).hasSize(2)
                 .extracting("title")
                 .containsExactly("title", "제목2");
+        assertThat(result.totalElements()).isEqualTo(2);
     }
 
     @Nested

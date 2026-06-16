@@ -5,6 +5,7 @@ import com.example.springbestpractice.application.post.command.PostDeleteCommand
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
+import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
 import com.example.springbestpractice.infrastructure.security.CurrentUserArgumentResolver;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -79,15 +81,18 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/posts - 게시글 목록을 반환한다")
-    void getAllPosts() throws Exception {
+    @DisplayName("GET /api/posts - 게시글 페이지를 반환한다")
+    void getPosts() throws Exception {
         // given
-        given(postService.getAllPosts()).willReturn(List.of(sampleResponse()));
+        PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
+        given(postService.getPosts(any(Pageable.class))).willReturn(page);
 
         // when & then
         mockMvc.perform(get("/api/posts"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("제목"))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test

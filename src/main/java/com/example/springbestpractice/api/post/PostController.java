@@ -8,14 +8,16 @@ import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.annotation.CurrentUser;
+import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -33,8 +35,10 @@ public class PostController {
     }
 
     @GetMapping
-    public List<PostResponse> getAllPosts() {
-        return postService.getAllPosts();
+    public PageResponse<PostResponse> getPosts(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return postService.getPosts(pageable);
     }
 
     @GetMapping("/{id}")
