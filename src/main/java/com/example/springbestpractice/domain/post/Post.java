@@ -37,6 +37,9 @@ public class Post {
     @Column(name = "author", nullable = false)
     private String authorNickname;
 
+    @Column(nullable = false)
+    private long likeCount;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -58,6 +61,17 @@ public class Post {
     public void update(String title, String content) {
         this.title = requireNotBlank(title, "제목은 필수입니다.");
         this.content = requireNotBlank(content, "내용은 필수입니다.");
+    }
+
+    public void increaseLikeCount() {
+        likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (likeCount == 0) {
+            throw new IllegalStateException("Like count cannot be negative.");
+        }
+        likeCount--;
     }
 
     public boolean isWrittenBy(Long userId) {
