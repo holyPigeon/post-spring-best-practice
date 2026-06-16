@@ -15,10 +15,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,9 +30,11 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -93,6 +97,45 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].title").value("제목"))
                 .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/posts - 기본 페이징 조건을 적용한다")
+    void getPostsWithDefaultPageable() throws Exception {
+        // when
+        mockMvc.perform(get("/api/posts"))
+                .andExpect(status().isOk());
+
+        // then
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(postService).getPosts(pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+        Sort.Order order = pageable.getSort().getOrderFor("createdAt");
+        assertThat(pageable.getPageNumber()).isZero();
+        assertThat(pageable.getPageSize()).isEqualTo(20);
+        assertThat(order).isNotNull();
+        assertThat(order.getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    @DisplayName("GET /api/posts - 정의되지 않은 정렬 값이면 400을 반환한다")
+    void getPostsWithInvalidSort() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/posts").param("sort", "INVALID"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/posts - sort=OLDEST면 200을 반환한다")
+    void getPostsWithValidSort() throws Exception {
+        // given
+        PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
+        given(postService.getPosts(any(Pageable.class))).willReturn(page);
+
+        // when & then
+        mockMvc.perform(get("/api/posts").param("sort", "OLDEST"))
+                .andExpect(status().isOk());
     }
 
     @Test
