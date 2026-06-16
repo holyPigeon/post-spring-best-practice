@@ -5,8 +5,8 @@ import com.example.springbestpractice.application.post.command.PostCreateCommand
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
+import com.example.springbestpractice.application.post.dto.PostPageRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
-import com.example.springbestpractice.application.post.dto.PostSort;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.annotation.CurrentUser;
 import com.example.springbestpractice.common.dto.PageResponse;
@@ -23,8 +23,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PostController {
 
-    private static final int MAX_PAGE_SIZE = 100;
-
     private final PostService postService;
 
     @PostMapping
@@ -36,13 +34,8 @@ public class PostController {
     }
 
     @GetMapping
-    public PageResponse<PostResponse> getPosts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "LATEST") PostSort sort
-    ) {
-        int boundedSize = Math.min(size, MAX_PAGE_SIZE);
-        return postService.getPosts(PageRequest.of(page, boundedSize, sort.getSort()));
+    public PageResponse<PostResponse> getPosts(@Valid @ModelAttribute PostPageRequest request) {
+        return postService.getPosts(PageRequest.of(request.page(), request.size(), request.sort().getSort()));
     }
 
     @GetMapping("/{id}")

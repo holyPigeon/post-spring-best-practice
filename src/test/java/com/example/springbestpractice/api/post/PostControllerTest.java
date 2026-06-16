@@ -127,6 +127,14 @@ class PostControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/posts - size가 상한을 초과하면 400을 반환한다")
+    void getPostsWithTooLargeSize() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/posts").param("size", "101"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("GET /api/posts - sort=OLDEST면 200을 반환한다")
     void getPostsWithValidSort() throws Exception {
         // given
