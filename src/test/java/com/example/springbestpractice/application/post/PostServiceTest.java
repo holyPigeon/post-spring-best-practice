@@ -5,6 +5,7 @@ import com.example.springbestpractice.application.post.command.PostDeleteCommand
 import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
+import com.example.springbestpractice.application.post.dto.PostSearchCondition;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
@@ -114,18 +115,20 @@ class PostServiceTest {
     void returnPostPage() {
         // given
         Post another = PostFixture.postWithId(2L, "제목2", "내용2", 2L, "다른작성자");
+        PostSearchCondition condition = new PostSearchCondition("title", 1L, null, null);
         Pageable pageable = PageRequest.of(0, 20);
-        given(postRepository.findAll(pageable))
+        given(postRepository.search("title", 1L, null, null, pageable))
                 .willReturn(new PageImpl<>(List.of(post, another), pageable, 2));
 
         // when
-        PageResponse<PostResponse> result = postService.getPosts(pageable);
+        PageResponse<PostResponse> result = postService.getPosts(condition, pageable);
 
         // then
         assertThat(result.content()).hasSize(2)
                 .extracting("title")
                 .containsExactly("title", "제목2");
         assertThat(result.totalElements()).isEqualTo(2);
+        verify(postRepository).search("title", 1L, null, null, pageable);
     }
 
     @Nested

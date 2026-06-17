@@ -4,6 +4,7 @@ import com.example.springbestpractice.application.post.PostService;
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
+import com.example.springbestpractice.application.post.dto.PostSearchCondition;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
@@ -28,6 +29,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -89,7 +91,7 @@ class PostControllerTest {
     void getPosts() throws Exception {
         // given
         PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
-        given(postService.getPosts(any(Pageable.class))).willReturn(page);
+        given(postService.getPosts(any(PostSearchCondition.class), any(Pageable.class))).willReturn(page);
 
         // when & then
         mockMvc.perform(get("/api/posts"))
@@ -107,15 +109,49 @@ class PostControllerTest {
                 .andExpect(status().isOk());
 
         // then
+        ArgumentCaptor<PostSearchCondition> conditionCaptor = ArgumentCaptor.forClass(PostSearchCondition.class);
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(postService).getPosts(pageableCaptor.capture());
+        verify(postService).getPosts(conditionCaptor.capture(), pageableCaptor.capture());
 
+        PostSearchCondition condition = conditionCaptor.getValue();
         Pageable pageable = pageableCaptor.getValue();
-        Sort.Order order = pageable.getSort().getOrderFor("createdAt");
+        Sort.Order createdAtOrder = pageable.getSort().getOrderFor("createdAt");
+        Sort.Order idOrder = pageable.getSort().getOrderFor("id");
+        assertThat(condition.keyword()).isNull();
+        assertThat(condition.authorId()).isNull();
+        assertThat(condition.createdFrom()).isNull();
+        assertThat(condition.createdTo()).isNull();
         assertThat(pageable.getPageNumber()).isZero();
         assertThat(pageable.getPageSize()).isEqualTo(20);
-        assertThat(order).isNotNull();
-        assertThat(order.getDirection()).isEqualTo(Sort.Direction.DESC);
+        assertThat(createdAtOrder).isNotNull();
+        assertThat(createdAtOrder.getDirection()).isEqualTo(Sort.Direction.DESC);
+        assertThat(idOrder).isNotNull();
+        assertThat(idOrder.getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    @DisplayName("GET /api/posts - 寃?됱“嫄댁쓣 ?쒕퉬?ㅼ뿉 ?꾨떖?쒕떎")
+    void getPostsWithSearchCondition() throws Exception {
+        // given
+        PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
+        given(postService.getPosts(any(PostSearchCondition.class), any(Pageable.class))).willReturn(page);
+
+        // when & then
+        mockMvc.perform(get("/api/posts")
+                        .param("keyword", " Spring ")
+                        .param("authorId", "3")
+                        .param("createdFrom", "2026-01-01T00:00:00")
+                        .param("createdTo", "2026-01-31T23:59:59"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<PostSearchCondition> conditionCaptor = ArgumentCaptor.forClass(PostSearchCondition.class);
+        verify(postService).getPosts(conditionCaptor.capture(), any(Pageable.class));
+
+        PostSearchCondition condition = conditionCaptor.getValue();
+        assertThat(condition.keyword()).isEqualTo("Spring");
+        assertThat(condition.authorId()).isEqualTo(3L);
+        assertThat(condition.createdFrom()).isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0));
+        assertThat(condition.createdTo()).isEqualTo(LocalDateTime.of(2026, 1, 31, 23, 59, 59));
     }
 
     @Test
@@ -135,15 +171,44 @@ class PostControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/posts - page媛 ?곹븳??珥덇낵?섎㈃ 400??諛섑솚?쒕떎")
+    void getPostsWithTooLargePage() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/posts").param("page", "1001"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/posts - 湲곌컙???뿭?꾨릺硫?400??諛섑솚?쒕떎")
+    void getPostsWithInvalidCreatedPeriod() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/posts")
+                        .param("createdFrom", "2026-02-01T00:00:00")
+                        .param("createdTo", "2026-01-01T00:00:00"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("GET /api/posts - sort=OLDEST면 200을 반환한다")
     void getPostsWithValidSort() throws Exception {
         // given
         PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
-        given(postService.getPosts(any(Pageable.class))).willReturn(page);
+        given(postService.getPosts(any(PostSearchCondition.class), any(Pageable.class))).willReturn(page);
 
         // when & then
         mockMvc.perform(get("/api/posts").param("sort", "OLDEST"))
                 .andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(postService).getPosts(any(PostSearchCondition.class), pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+        Sort.Order createdAtOrder = pageable.getSort().getOrderFor("createdAt");
+        Sort.Order idOrder = pageable.getSort().getOrderFor("id");
+        assertThat(createdAtOrder).isNotNull();
+        assertThat(createdAtOrder.getDirection()).isEqualTo(Sort.Direction.ASC);
+        assertThat(idOrder).isNotNull();
+        assertThat(idOrder.getDirection()).isEqualTo(Sort.Direction.ASC);
     }
 
     @Test
