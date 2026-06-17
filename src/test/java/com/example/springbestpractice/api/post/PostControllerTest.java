@@ -4,8 +4,8 @@ import com.example.springbestpractice.application.post.PostService;
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
-import com.example.springbestpractice.application.post.dto.PostSearchCondition;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
+import com.example.springbestpractice.application.post.query.PostSearchQuery;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
@@ -91,7 +91,7 @@ class PostControllerTest {
     void getPosts() throws Exception {
         // given
         PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
-        given(postService.getPosts(any(PostSearchCondition.class), any(Pageable.class))).willReturn(page);
+        given(postService.getPosts(any(PostSearchQuery.class))).willReturn(page);
 
         // when & then
         mockMvc.perform(get("/api/posts"))
@@ -109,18 +109,17 @@ class PostControllerTest {
                 .andExpect(status().isOk());
 
         // then
-        ArgumentCaptor<PostSearchCondition> conditionCaptor = ArgumentCaptor.forClass(PostSearchCondition.class);
-        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(postService).getPosts(conditionCaptor.capture(), pageableCaptor.capture());
+        ArgumentCaptor<PostSearchQuery> queryCaptor = ArgumentCaptor.forClass(PostSearchQuery.class);
+        verify(postService).getPosts(queryCaptor.capture());
 
-        PostSearchCondition condition = conditionCaptor.getValue();
-        Pageable pageable = pageableCaptor.getValue();
+        PostSearchQuery query = queryCaptor.getValue();
+        Pageable pageable = query.pageable();
         Sort.Order createdAtOrder = pageable.getSort().getOrderFor("createdAt");
         Sort.Order idOrder = pageable.getSort().getOrderFor("id");
-        assertThat(condition.keyword()).isNull();
-        assertThat(condition.authorId()).isNull();
-        assertThat(condition.createdFrom()).isNull();
-        assertThat(condition.createdTo()).isNull();
+        assertThat(query.keyword()).isNull();
+        assertThat(query.authorId()).isNull();
+        assertThat(query.createdFrom()).isNull();
+        assertThat(query.createdTo()).isNull();
         assertThat(pageable.getPageNumber()).isZero();
         assertThat(pageable.getPageSize()).isEqualTo(20);
         assertThat(createdAtOrder).isNotNull();
@@ -134,7 +133,7 @@ class PostControllerTest {
     void getPostsWithSearchCondition() throws Exception {
         // given
         PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
-        given(postService.getPosts(any(PostSearchCondition.class), any(Pageable.class))).willReturn(page);
+        given(postService.getPosts(any(PostSearchQuery.class))).willReturn(page);
 
         // when & then
         mockMvc.perform(get("/api/posts")
@@ -144,14 +143,14 @@ class PostControllerTest {
                         .param("createdTo", "2026-01-31T23:59:59"))
                 .andExpect(status().isOk());
 
-        ArgumentCaptor<PostSearchCondition> conditionCaptor = ArgumentCaptor.forClass(PostSearchCondition.class);
-        verify(postService).getPosts(conditionCaptor.capture(), any(Pageable.class));
+        ArgumentCaptor<PostSearchQuery> queryCaptor = ArgumentCaptor.forClass(PostSearchQuery.class);
+        verify(postService).getPosts(queryCaptor.capture());
 
-        PostSearchCondition condition = conditionCaptor.getValue();
-        assertThat(condition.keyword()).isEqualTo("Spring");
-        assertThat(condition.authorId()).isEqualTo(3L);
-        assertThat(condition.createdFrom()).isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0));
-        assertThat(condition.createdTo()).isEqualTo(LocalDateTime.of(2026, 1, 31, 23, 59, 59));
+        PostSearchQuery query = queryCaptor.getValue();
+        assertThat(query.keyword()).isEqualTo("Spring");
+        assertThat(query.authorId()).isEqualTo(3L);
+        assertThat(query.createdFrom()).isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0));
+        assertThat(query.createdTo()).isEqualTo(LocalDateTime.of(2026, 1, 31, 23, 59, 59));
     }
 
     @Test
@@ -193,16 +192,16 @@ class PostControllerTest {
     void getPostsWithValidSort() throws Exception {
         // given
         PageResponse<PostResponse> page = new PageResponse<>(List.of(sampleResponse()), 0, 20, 1, 1, true, true);
-        given(postService.getPosts(any(PostSearchCondition.class), any(Pageable.class))).willReturn(page);
+        given(postService.getPosts(any(PostSearchQuery.class))).willReturn(page);
 
         // when & then
         mockMvc.perform(get("/api/posts").param("sort", "OLDEST"))
                 .andExpect(status().isOk());
 
-        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(postService).getPosts(any(PostSearchCondition.class), pageableCaptor.capture());
+        ArgumentCaptor<PostSearchQuery> queryCaptor = ArgumentCaptor.forClass(PostSearchQuery.class);
+        verify(postService).getPosts(queryCaptor.capture());
 
-        Pageable pageable = pageableCaptor.getValue();
+        Pageable pageable = queryCaptor.getValue().pageable();
         Sort.Order createdAtOrder = pageable.getSort().getOrderFor("createdAt");
         Sort.Order idOrder = pageable.getSort().getOrderFor("id");
         assertThat(createdAtOrder).isNotNull();

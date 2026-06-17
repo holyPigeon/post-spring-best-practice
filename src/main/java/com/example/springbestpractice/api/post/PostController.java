@@ -9,12 +9,12 @@ import com.example.springbestpractice.application.post.dto.PostPageRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostSearchCondition;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
+import com.example.springbestpractice.application.post.query.PostSearchQuery;
 import com.example.springbestpractice.common.annotation.CurrentUser;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,10 +36,10 @@ public class PostController {
 
     @GetMapping
     public PageResponse<PostResponse> getPosts(
-            @Valid @ModelAttribute PostPageRequest request,
+            @Valid @ModelAttribute PostPageRequest pageRequest,
             @Valid @ModelAttribute PostSearchCondition condition
     ) {
-        return postService.getPosts(condition, PageRequest.of(request.page(), request.size(), request.sort().getSort()));
+        return postService.getPosts(PostSearchQuery.from(condition, pageRequest));
     }
 
     @GetMapping("/{id}")
