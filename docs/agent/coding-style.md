@@ -25,7 +25,7 @@ Do not add redundant null checks when all of these are true:
 
 - The constructor or method is private.
 - The value is not accepted from request DTOs or external input.
-- The value is supplied internally by static factories as a fixed enum or constant.
+- The value is supplied internally by domain code or static factories, for example a fixed enum/constant, a loaded entity, or a value already validated at its trust boundary.
 - There is no normal application code path that can pass null.
 
 Still validate values from:
