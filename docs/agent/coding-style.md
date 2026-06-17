@@ -73,14 +73,30 @@ Before adding a defensive check, ask:
 - Keep services thin. They coordinate repositories, domain methods, and external collaborators.
 - Remember Spring AOP does not apply `@Transactional` to same-class self-invocation.
 
-## DTO And Command Rules
+## DTO, Command, And Query Rules
 
 - Request and response DTOs are Java `record`s.
 - Keep request/response DTOs under `application/{domain}/dto` so `application` never depends on `api`.
 - Response records may expose `XxxResponse.from(entity)` for simple mapping.
 - Controllers must not return entities.
 - Command records live under `application/{domain}/command` when introduced.
+- Query records live under `application/{domain}/query` when introduced.
 - Do not add `request.toEntity()` or `Entity.from(request)`.
+
+Use names that show the object's layer and purpose:
+
+| Suffix | Use |
+|---|---|
+| `Request` | API/controller binding input from HTTP requests |
+| `Response` | API/application response DTO returned to clients |
+| `Command` | Application input for write use cases that create, update, delete, or trigger state changes |
+| `Query` | Application input for read use cases, especially when search conditions and paging/sorting form one use case input |
+| `Criteria` | Search criteria object, usually when the object represents filters rather than the whole read use case |
+| `Condition` | Dynamic query condition object, often close to QueryDSL/JPA query construction or controller query parameters |
+| `Params` | Lightweight parameter bundle when no stronger domain/use-case name is helpful |
+| `Input` | Pattern-neutral application input when `Command` or `Query` would imply too much |
+
+`Command` and `Query` naming does not mean this project uses CQRS architecture. Do not introduce command/query handlers, separate read/write models, projections, or read repositories unless the task explicitly asks for that architecture.
 
 Service may accept a Request DTO directly only when all conditions are true:
 
@@ -89,7 +105,7 @@ Service may accept a Request DTO directly only when all conditions are true:
 - Only one controller endpoint calls the use case.
 - The request does not need ownership/security fields.
 
-Introduce an Application Command when any condition above is false. Build it in the controller with a factory such as `PostCreateCommand.from(request, loginUser)`.
+Introduce an Application Command or Query when any condition above is false. Build it in the controller with a factory such as `PostCreateCommand.from(request, loginUser)` or `PostSearchQuery.from(condition, pageRequest)`.
 
 ## Exception And DI Rules
 
