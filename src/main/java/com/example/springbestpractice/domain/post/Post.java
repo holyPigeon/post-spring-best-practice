@@ -64,7 +64,7 @@ public class Post {
     }
 
     public boolean isWrittenBy(Long userId) {
-        return authorId != null && authorId.equals(userId);
+        return authorId.equals(userId);
     }
 
     private static Long requireAuthorId(Long authorId) {

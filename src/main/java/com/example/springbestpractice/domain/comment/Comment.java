@@ -50,7 +50,7 @@ public class Comment {
     private LocalDateTime updatedAt;
 
     private Comment(Post post, String content, Long authorId, String authorNickname) {
-        this.post = requirePost(post);
+        this.post = post;
         this.content = requireNotBlank(content, "댓글 내용은 필수입니다.");
         this.authorId = requireAuthorId(authorId);
         this.authorNickname = requireNotBlank(authorNickname, "작성자는 필수입니다.");
@@ -65,14 +65,7 @@ public class Comment {
     }
 
     public boolean isWrittenBy(Long userId) {
-        return authorId != null && authorId.equals(userId);
-    }
-
-    private static Post requirePost(Post post) {
-        if (post == null) {
-            throw new IllegalArgumentException("게시글은 필수입니다.");
-        }
-        return post;
+        return authorId.equals(userId);
     }
 
     private static Long requireAuthorId(Long authorId) {

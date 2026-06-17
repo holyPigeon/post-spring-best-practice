@@ -31,14 +31,6 @@ class CommentTest {
         }
 
         @Test
-        @DisplayName("게시글이 없으면 예외를 던진다")
-        void throwExceptionWhenPostNull() {
-            assertThatThrownBy(() -> Comment.create(null, "댓글 내용", 2L, "댓글 작성자"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("게시글은 필수입니다.");
-        }
-
-        @Test
         @DisplayName("작성자 아이디가 없으면 예외를 던진다")
         void throwExceptionWhenAuthorIdNull() {
             // given
