@@ -30,8 +30,8 @@ public class PostLikeService {
         }
 
         postLikeRepository.save(PostLike.create(post, loginUser.id()));
-        post.increaseLikeCount();
-        return PostLikeResponse.liked(post);
+        postRepository.increaseLikeCount(post.getId());
+        return PostLikeResponse.liked(getPost(post.getId()));
     }
 
     @Transactional
@@ -40,7 +40,8 @@ public class PostLikeService {
         Post post = getPost(command.postId());
         int deletedCount = postLikeRepository.deleteByPostIdAndUserId(post.getId(), loginUser.id());
         if (deletedCount > 0) {
-            post.decreaseLikeCount();
+            postRepository.decreaseLikeCount(post.getId());
+            return PostLikeResponse.unliked(getPost(post.getId()));
         }
         return PostLikeResponse.unliked(post);
     }

@@ -59,7 +59,9 @@ class PostLikeServiceTest {
         @DisplayName("save like and increase post like count")
         void likePost() {
             // given
-            given(postRepository.findById(1L)).willReturn(Optional.of(post));
+            Post likedPost = PostFixture.postWithId(1L);
+            likedPost.increaseLikeCount();
+            given(postRepository.findById(1L)).willReturn(Optional.of(post), Optional.of(likedPost));
             given(postLikeRepository.existsByPostIdAndUserId(1L, 2L)).willReturn(false);
 
             // when
@@ -71,10 +73,10 @@ class PostLikeServiceTest {
             assertThat(postLikeCaptor.getValue())
                     .extracting("post", "userId")
                     .containsExactly(post, 2L);
+            verify(postRepository).increaseLikeCount(1L);
             assertThat(result)
                     .extracting("postId", "likeCount", "liked")
                     .containsExactly(1L, 1L, true);
-            assertThat(post.getLikeCount()).isEqualTo(1);
         }
 
         @Test
@@ -93,6 +95,7 @@ class PostLikeServiceTest {
                     .extracting("postId", "likeCount", "liked")
                     .containsExactly(1L, 1L, true);
             verify(postLikeRepository, never()).save(any(PostLike.class));
+            verify(postRepository, never()).increaseLikeCount(1L);
         }
 
         @Test
@@ -116,7 +119,8 @@ class PostLikeServiceTest {
         void unlikePost() {
             // given
             post.increaseLikeCount();
-            given(postRepository.findById(1L)).willReturn(Optional.of(post));
+            Post unlikedPost = PostFixture.postWithId(1L);
+            given(postRepository.findById(1L)).willReturn(Optional.of(post), Optional.of(unlikedPost));
             given(postLikeRepository.deleteByPostIdAndUserId(1L, 2L)).willReturn(1);
 
             // when
@@ -126,7 +130,7 @@ class PostLikeServiceTest {
             assertThat(result)
                     .extracting("postId", "likeCount", "liked")
                     .containsExactly(1L, 0L, false);
-            assertThat(post.getLikeCount()).isZero();
+            verify(postRepository).decreaseLikeCount(1L);
         }
 
         @Test
@@ -143,6 +147,7 @@ class PostLikeServiceTest {
             assertThat(result)
                     .extracting("postId", "likeCount", "liked")
                     .containsExactly(1L, 0L, false);
+            verify(postRepository, never()).decreaseLikeCount(1L);
             verify(postLikeRepository, never()).delete(any(PostLike.class));
         }
     }
