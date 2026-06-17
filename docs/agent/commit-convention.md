@@ -1,4 +1,4 @@
-# Commit Convention
+# Commit And Branch Convention
 
 ## Format
 
@@ -42,3 +42,28 @@ docs(global): AI 작업 지침 정리
 - Do not end the subject with a period.
 - Add a body only when the change has context, migration notes, risks, or follow-up work that the subject cannot express.
 - When creating a commit, include only files related to the requested change.
+
+## Branch Naming
+
+Use the same type prefixes as commit messages.
+
+```text
+type/short-description
+```
+
+Examples:
+
+```text
+feat/post-like
+fix/auth-token-refresh
+docs/agent-rules
+refactor/post-service
+```
+
+Rules:
+
+- Use one of the commit types from this document as the branch prefix.
+- Write the description after `/` in lowercase kebab-case.
+- Do not add agent or tool prefixes such as `codex/` or `claude/`.
+- When the user asks to create a branch without giving an exact name, choose this format.
+- If the user gives an exact branch name, use the user's name.

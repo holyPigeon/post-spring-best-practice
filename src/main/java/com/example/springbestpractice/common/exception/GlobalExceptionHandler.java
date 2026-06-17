@@ -1,4 +1,5 @@
 package com.example.springbestpractice.common.exception;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -24,6 +25,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse("이미 처리된 요청이거나 중복된 데이터입니다."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

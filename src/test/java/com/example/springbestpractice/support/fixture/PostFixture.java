@@ -18,6 +18,12 @@ public final class PostFixture {
         return post;
     }
 
+    public static Post postWithLikeCount(Long id, long likeCount) {
+        Post post = postWithId(id);
+        ReflectionTestUtils.setField(post, "likeCount", likeCount);
+        return post;
+    }
+
     public static Post postWithId(Long id, String title, String content, Long authorId, String authorNickname) {
         Post post = Post.create(title, content, authorId, authorNickname);
         ReflectionTestUtils.setField(post, "id", id);

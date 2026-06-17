@@ -162,7 +162,7 @@ class PostControllerTest {
     void updatePost() throws Exception {
         // given
         PostUpdateRequest request = new PostUpdateRequest("새 제목", "새 내용");
-        given(postService.updatePost(any())).willReturn(new PostResponse(1L, "새 제목", "새 내용", "작성자", null, null));
+        given(postService.updatePost(any())).willReturn(new PostResponse(1L, "새 제목", "새 내용", "작성자", 0, null, null));
 
         // when & then
         mockMvc.perform(put("/api/posts/1")
@@ -184,6 +184,6 @@ class PostControllerTest {
     }
 
     private PostResponse sampleResponse() {
-        return new PostResponse(1L, "제목", "내용", "작성자", null, null);
+        return new PostResponse(1L, "제목", "내용", "작성자", 0, null, null);
     }
 }

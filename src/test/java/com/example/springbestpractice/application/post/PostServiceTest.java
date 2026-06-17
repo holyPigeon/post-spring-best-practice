@@ -11,6 +11,7 @@ import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;
+import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import com.example.springbestpractice.support.fixture.PostFixture;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,9 @@ class PostServiceTest {
 
     @Mock
     CommentRepository commentRepository;
+
+    @Mock
+    PostLikeRepository postLikeRepository;
 
     @InjectMocks
     PostService postService;
@@ -168,6 +172,7 @@ class PostServiceTest {
         postService.deletePost(PostDeleteCommand.from(1L, loginUser));
 
         // then
+        verify(postLikeRepository).deleteByPostId(1L);
         verify(commentRepository).deleteByPostId(1L);
         verify(postRepository).delete(post);
     }
