@@ -43,6 +43,14 @@ docs(global): AI 작업 지침 정리
 - Add a body only when the change has context, migration notes, risks, or follow-up work that the subject cannot express.
 - When creating a commit, include only files related to the requested change.
 
+## Branch Strategy
+
+- `main` is the stable branch. Releases live here.
+- `develop` is the default integration branch, cut from `main`.
+- Cut every task branch from `develop`, never directly from `main`.
+- Open task-branch PRs against `develop`, and merge them into `develop`.
+- Promote accumulated work to `main` with a `develop -> main` release PR.
+
 ## Branch Naming
 
 Use the same type prefixes as commit messages.
@@ -62,6 +70,7 @@ refactor/post-service
 
 Rules:
 
+- Cut the branch from `develop` (see Branch Strategy).
 - Use one of the commit types from this document as the branch prefix.
 - Write the description after `/` in lowercase kebab-case.
 - Do not add agent or tool prefixes such as `codex/` or `claude/`.
