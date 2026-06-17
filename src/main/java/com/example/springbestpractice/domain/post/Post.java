@@ -37,6 +37,9 @@ public class Post {
     @Column(name = "author", nullable = false)
     private String authorNickname;
 
+    @Column(nullable = false)
+    private long likeCount;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

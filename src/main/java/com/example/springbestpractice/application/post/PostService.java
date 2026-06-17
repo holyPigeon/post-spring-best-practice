@@ -9,6 +9,7 @@ import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;
+import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final PostLikeRepository postLikeRepository;
 
     @Transactional
     public PostResponse createPost(PostCreateCommand command) {
@@ -52,6 +54,7 @@ public class PostService {
     public void deletePost(PostDeleteCommand command) {
         Post post = getPostById(command.id());
         validateOwner(post, command.loginUser());
+        postLikeRepository.deleteByPostId(command.id());
         commentRepository.deleteByPostId(command.id());
         postRepository.delete(post);
     }

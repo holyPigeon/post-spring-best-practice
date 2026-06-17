@@ -9,6 +9,7 @@ public record PostResponse(
         String title,
         String content,
         String author,
+        long likeCount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -18,6 +19,7 @@ public record PostResponse(
                 post.getTitle(),
                 post.getContent(),
                 post.getAuthorNickname(),
+                post.getLikeCount(),
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );
