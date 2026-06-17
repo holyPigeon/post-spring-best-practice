@@ -26,13 +26,6 @@ class PostLikeTest {
     }
 
     @Test
-    @DisplayName("throw exception when post is null")
-    void throwExceptionWhenPostNull() {
-        assertThatThrownBy(() -> PostLike.create(null, 2L))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("throw exception when user id is null")
     void throwExceptionWhenUserIdNull() {
         assertThatThrownBy(() -> PostLike.create(PostFixture.post(), null))

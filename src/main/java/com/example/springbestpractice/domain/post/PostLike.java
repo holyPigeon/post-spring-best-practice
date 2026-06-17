@@ -38,19 +38,12 @@ public class PostLike {
     private Long userId;
 
     private PostLike(Post post, Long userId) {
-        this.post = requirePost(post);
+        this.post = post;
         this.userId = requireUserId(userId);
     }
 
     public static PostLike create(Post post, Long userId) {
         return new PostLike(post, userId);
-    }
-
-    private static Post requirePost(Post post) {
-        if (post == null) {
-            throw new IllegalArgumentException("Post is required.");
-        }
-        return post;
     }
 
     private static Long requireUserId(Long userId) {
