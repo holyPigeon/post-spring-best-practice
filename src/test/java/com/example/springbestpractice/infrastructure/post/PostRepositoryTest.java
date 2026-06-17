@@ -42,7 +42,9 @@ class PostRepositoryTest {
     void decreaseLikeCount() {
         // given
         Post post = em.persist(Post.create("title", "content", 1L, "writer"));
-        post.increaseLikeCount();
+        em.flush();
+        em.clear();
+        postRepository.increaseLikeCount(post.getId());
         em.flush();
         em.clear();
 

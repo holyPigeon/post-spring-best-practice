@@ -59,8 +59,7 @@ class PostLikeServiceTest {
         @DisplayName("save like and increase post like count")
         void likePost() {
             // given
-            Post likedPost = PostFixture.postWithId(1L);
-            likedPost.increaseLikeCount();
+            Post likedPost = PostFixture.postWithLikeCount(1L, 1L);
             given(postRepository.findById(1L)).willReturn(Optional.of(post), Optional.of(likedPost));
             given(postLikeRepository.existsByPostIdAndUserId(1L, 2L)).willReturn(false);
 
@@ -83,7 +82,7 @@ class PostLikeServiceTest {
         @DisplayName("return current state when already liked")
         void returnCurrentStateWhenAlreadyLiked() {
             // given
-            post.increaseLikeCount();
+            post = PostFixture.postWithLikeCount(1L, 1L);
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
             given(postLikeRepository.existsByPostIdAndUserId(1L, 2L)).willReturn(true);
 
@@ -118,7 +117,7 @@ class PostLikeServiceTest {
         @DisplayName("delete like and decrease post like count")
         void unlikePost() {
             // given
-            post.increaseLikeCount();
+            post = PostFixture.postWithLikeCount(1L, 1L);
             Post unlikedPost = PostFixture.postWithId(1L);
             given(postRepository.findById(1L)).willReturn(Optional.of(post), Optional.of(unlikedPost));
             given(postLikeRepository.deleteByPostIdAndUserId(1L, 2L)).willReturn(1);

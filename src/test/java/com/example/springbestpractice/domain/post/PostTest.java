@@ -99,47 +99,4 @@ class PostTest {
                     .hasMessage("내용은 필수입니다.");
         }
     }
-
-    @Nested
-    @DisplayName("Post like count")
-    class LikeCount {
-
-        @Test
-        @DisplayName("increase like count")
-        void increaseLikeCount() {
-            // given
-            Post post = Post.create("title", "content", 1L, "writer");
-
-            // when
-            post.increaseLikeCount();
-
-            // then
-            assertThat(post.getLikeCount()).isEqualTo(1);
-        }
-
-        @Test
-        @DisplayName("decrease like count")
-        void decreaseLikeCount() {
-            // given
-            Post post = Post.create("title", "content", 1L, "writer");
-            post.increaseLikeCount();
-
-            // when
-            post.decreaseLikeCount();
-
-            // then
-            assertThat(post.getLikeCount()).isZero();
-        }
-
-        @Test
-        @DisplayName("throw exception when like count becomes negative")
-        void throwExceptionWhenLikeCountBecomesNegative() {
-            // given
-            Post post = Post.create("title", "content", 1L, "writer");
-
-            // when & then
-            assertThatThrownBy(post::decreaseLikeCount)
-                    .isInstanceOf(IllegalStateException.class);
-        }
-    }
 }

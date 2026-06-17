@@ -63,17 +63,6 @@ public class Post {
         this.content = requireNotBlank(content, "내용은 필수입니다.");
     }
 
-    public void increaseLikeCount() {
-        likeCount++;
-    }
-
-    public void decreaseLikeCount() {
-        if (likeCount == 0) {
-            throw new IllegalStateException("Like count cannot be negative.");
-        }
-        likeCount--;
-    }
-
     public boolean isWrittenBy(Long userId) {
         return authorId != null && authorId.equals(userId);
     }
