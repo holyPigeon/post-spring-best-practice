@@ -54,6 +54,15 @@ Use `@WebMvcTest` for controller slices and `@DataJpaTest` for repository/data s
 - H2 only for test runtime repository/data slice tests
 - Lombok annotation processors configured for main and test
 
+## Operational Assumptions
+
+This project currently has no production server, production database, or deployed table setup.
+
+- Treat production profile, database migration, index deployment, and EXPLAIN checks as learning and future-readiness topics unless the user explicitly says they are preparing an operational environment.
+- Do not frame production-readiness work as urgent, blocking, or required for the current task before the user mentions creating or deploying a production server.
+- In reviews, separate current local/test learning risks from future production considerations. Prioritize issues that affect the current code, tests, local execution, or stated learning goal.
+- It is acceptable to briefly note future operational work when directly relevant, but do not repeatedly push it as an immediate improvement.
+
 ## Architecture
 
 Use layer-first packages. The first package segment is the future module boundary.

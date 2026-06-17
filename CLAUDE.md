@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working in this repository.
 
+## Communication Language
+
+- Reply to the user in Korean by default.
+- Use another language only when the user explicitly asks for it.
+- Keep code, commands, logs, API names, file paths, identifiers, and error messages in their original language when that is clearer.
+- Write code review titles and explanations in Korean. Priority labels such as `P1` and `P2` may stay as-is.
+
 ## Canonical Documents
 
 `CLAUDE.md` is a short router. Keep shared project rules in `docs/agent/` so Claude Code and Codex use the same source of truth.
