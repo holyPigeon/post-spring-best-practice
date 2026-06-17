@@ -4,8 +4,14 @@ import org.springframework.data.domain.Sort;
 
 public enum PostSort {
 
-    LATEST(Sort.by(Sort.Direction.DESC, "createdAt")),
-    OLDEST(Sort.by(Sort.Direction.ASC, "createdAt"));
+    LATEST(Sort.by(
+            Sort.Order.desc("createdAt"),
+            Sort.Order.desc("id")
+    )),
+    OLDEST(Sort.by(
+            Sort.Order.asc("createdAt"),
+            Sort.Order.asc("id")
+    ));
 
     private final Sort sort;
 

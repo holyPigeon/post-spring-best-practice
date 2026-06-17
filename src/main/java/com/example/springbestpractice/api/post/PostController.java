@@ -7,6 +7,7 @@ import com.example.springbestpractice.application.post.command.PostUpdateCommand
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
 import com.example.springbestpractice.application.post.dto.PostPageRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
+import com.example.springbestpractice.application.post.dto.PostSearchCondition;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.annotation.CurrentUser;
 import com.example.springbestpractice.common.dto.PageResponse;
@@ -34,8 +35,11 @@ public class PostController {
     }
 
     @GetMapping
-    public PageResponse<PostResponse> getPosts(@Valid @ModelAttribute PostPageRequest request) {
-        return postService.getPosts(PageRequest.of(request.page(), request.size(), request.sort().getSort()));
+    public PageResponse<PostResponse> getPosts(
+            @Valid @ModelAttribute PostPageRequest request,
+            @Valid @ModelAttribute PostSearchCondition condition
+    ) {
+        return postService.getPosts(condition, PageRequest.of(request.page(), request.size(), request.sort().getSort()));
     }
 
     @GetMapping("/{id}")

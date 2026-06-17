@@ -24,6 +24,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
@@ -32,6 +33,9 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testCompileOnly 'org.projectlombok:lombok'
@@ -42,4 +46,22 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+def querydslDir = layout.buildDirectory.dir('generated/querydsl').get().asFile
+
+sourceSets {
+    main {
+        java {
+            srcDir querydslDir
+        }
+    }
+}
+
+tasks.named('compileJava') {
+    options.generatedSourceOutputDirectory = querydslDir
+}
+
+tasks.named('clean') {
+    delete querydslDir
 }

@@ -4,6 +4,7 @@ import com.example.springbestpractice.application.post.command.PostCreateCommand
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostResponse;
+import com.example.springbestpractice.application.post.dto.PostSearchCondition;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
@@ -38,8 +39,14 @@ public class PostService {
         return PostResponse.from(post);
     }
 
-    public PageResponse<PostResponse> getPosts(Pageable pageable) {
-        return PageResponse.from(postRepository.findAll(pageable).map(PostResponse::from));
+    public PageResponse<PostResponse> getPosts(PostSearchCondition condition, Pageable pageable) {
+        return PageResponse.from(postRepository.search(
+                condition.keyword(),
+                condition.authorId(),
+                condition.createdFrom(),
+                condition.createdTo(),
+                pageable
+        ).map(PostResponse::from));
     }
 
     @Transactional
