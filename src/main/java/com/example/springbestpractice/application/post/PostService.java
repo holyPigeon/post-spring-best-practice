@@ -41,6 +41,7 @@ public class PostService {
     public PageResponse<PostResponse> getPosts(PostSearchQuery query) {
         return PageResponse.from(postRepository.search(
                 query.keyword(),
+                query.contentKeyword(),
                 query.authorId(),
                 query.createdFrom(),
                 query.createdTo(),

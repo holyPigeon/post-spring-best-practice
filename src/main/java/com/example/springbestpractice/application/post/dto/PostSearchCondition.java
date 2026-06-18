@@ -11,6 +11,9 @@ public record PostSearchCondition(
         @Size(max = 100, message = "keyword must be 100 characters or less.")
         String keyword,
 
+        @Size(max = 100, message = "contentKeyword must be 100 characters or less.")
+        String contentKeyword,
+
         @Positive(message = "authorId must be positive.")
         Long authorId,
 
@@ -21,16 +24,24 @@ public record PostSearchCondition(
         LocalDateTime createdTo
 ) {
     public PostSearchCondition {
-        if (keyword != null) {
-            keyword = keyword.trim();
-            if (keyword.isBlank()) {
-                keyword = null;
-            }
-        }
+        keyword = normalizeKeyword(keyword);
+        contentKeyword = normalizeKeyword(contentKeyword);
     }
 
     @AssertTrue(message = "createdFrom must be before or equal to createdTo.")
     public boolean isCreatedPeriodValid() {
         return createdFrom == null || createdTo == null || !createdFrom.isAfter(createdTo);
+    }
+
+    private static String normalizeKeyword(String keyword) {
+        if (keyword == null) {
+            return null;
+        }
+
+        String trimmed = keyword.trim();
+        if (trimmed.isBlank()) {
+            return null;
+        }
+        return trimmed;
     }
 }

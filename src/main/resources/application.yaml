@@ -57,3 +57,9 @@ logging:
     root: "${LOGGING_LEVEL_ROOT:INFO}"
     org.hibernate.SQL: "${LOGGING_LEVEL_SQL:WARN}"
     org.hibernate.orm.jdbc.bind: "${LOGGING_LEVEL_BIND:WARN}"
+
+app:
+  post:
+    search:
+      fulltext:
+        enabled: "${APP_POST_SEARCH_FULLTEXT_ENABLED:true}"

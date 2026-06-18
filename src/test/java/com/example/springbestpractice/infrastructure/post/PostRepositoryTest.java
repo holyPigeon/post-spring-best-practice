@@ -90,12 +90,30 @@ class PostRepositoryTest {
         persistPost("JPA basics", 1L, baseTime.minusDays(2));
 
         // when
-        Page<Post> result = postRepository.search("Query", null, null, null, latestPage(0, 10));
+        Page<Post> result = postRepository.search("Query", null, null, null, null, latestPage(0, 10));
 
         // then
         assertThat(result.getContent())
                 .extracting(Post::getTitle)
                 .containsExactly("Spring QueryDSL");
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("search posts by content keyword")
+    void searchByContentKeyword() {
+        // given
+        LocalDateTime baseTime = LocalDateTime.of(2026, 1, 10, 12, 0);
+        persistPost("Spring title", "QueryDSL predicate content", 1L, baseTime.minusDays(1));
+        persistPost("JPA basics", "Entity mapping content", 1L, baseTime.minusDays(2));
+
+        // when
+        Page<Post> result = postRepository.search(null, "predicate", null, null, null, latestPage(0, 10));
+
+        // then
+        assertThat(result.getContent())
+                .extracting(Post::getTitle)
+                .containsExactly("Spring title");
         assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
@@ -111,7 +129,7 @@ class PostRepositoryTest {
         persistPost("after period", 1L, end.plusSeconds(1));
 
         // when
-        Page<Post> result = postRepository.search(null, 1L, start, end, latestPage(0, 10));
+        Page<Post> result = postRepository.search(null, null, 1L, start, end, latestPage(0, 10));
 
         // then
         assertThat(result.getContent())
@@ -130,7 +148,7 @@ class PostRepositoryTest {
         persistPost("new", 1L, baseTime);
 
         // when
-        Page<Post> result = postRepository.search(null, null, null, null, latestPage(1, 2));
+        Page<Post> result = postRepository.search(null, null, null, null, null, latestPage(1, 2));
 
         // then
         assertThat(result.getContent())
@@ -150,7 +168,7 @@ class PostRepositoryTest {
         persistPost("second", 1L, sameTime);
 
         // when
-        Page<Post> result = postRepository.search(null, null, null, null, latestPage(0, 10));
+        Page<Post> result = postRepository.search(null, null, null, null, null, latestPage(0, 10));
 
         // then
         assertThat(result.getContent())
@@ -166,7 +184,11 @@ class PostRepositoryTest {
     }
 
     private Post persistPost(String title, Long authorId, LocalDateTime createdAt) {
-        Post post = em.persist(Post.create(title, "content", authorId, "writer" + authorId));
+        return persistPost(title, "content", authorId, createdAt);
+    }
+
+    private Post persistPost(String title, String content, Long authorId, LocalDateTime createdAt) {
+        Post post = em.persist(Post.create(title, content, authorId, "writer" + authorId));
         em.flush();
         em.getEntityManager().createQuery("update Post p set p.createdAt = :createdAt where p.id = :id")
                 .setParameter("createdAt", createdAt)

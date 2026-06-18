@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 public record PostSearchQuery(
         String keyword,
+        String contentKeyword,
         Long authorId,
         LocalDateTime createdFrom,
         LocalDateTime createdTo,
@@ -17,6 +18,7 @@ public record PostSearchQuery(
     public static PostSearchQuery from(PostSearchCondition condition, PostPageRequest pageRequest) {
         return new PostSearchQuery(
                 condition.keyword(),
+                condition.contentKeyword(),
                 condition.authorId(),
                 condition.createdFrom(),
                 condition.createdTo(),

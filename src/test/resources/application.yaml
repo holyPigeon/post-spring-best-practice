@@ -13,3 +13,9 @@ jwt:
   secret: spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that
   access-token-expiration: 1800000
   refresh-token-expiration: 604800000
+
+app:
+  post:
+    search:
+      fulltext:
+        enabled: false

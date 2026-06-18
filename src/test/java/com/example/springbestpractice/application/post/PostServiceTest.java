@@ -116,8 +116,8 @@ class PostServiceTest {
         // given
         Post another = PostFixture.postWithId(2L, "제목2", "내용2", 2L, "다른작성자");
         Pageable pageable = PageRequest.of(0, 20);
-        PostSearchQuery query = new PostSearchQuery("title", 1L, null, null, pageable);
-        given(postRepository.search("title", 1L, null, null, pageable))
+        PostSearchQuery query = new PostSearchQuery("title", null, 1L, null, null, pageable);
+        given(postRepository.search("title", null, 1L, null, null, pageable))
                 .willReturn(new PageImpl<>(List.of(post, another), pageable, 2));
 
         // when
@@ -128,7 +128,7 @@ class PostServiceTest {
                 .extracting("title")
                 .containsExactly("title", "제목2");
         assertThat(result.totalElements()).isEqualTo(2);
-        verify(postRepository).search("title", 1L, null, null, pageable);
+        verify(postRepository).search("title", null, 1L, null, null, pageable);
     }
 
     @Nested

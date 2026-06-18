@@ -117,6 +117,7 @@ class PostControllerTest {
         Sort.Order createdAtOrder = pageable.getSort().getOrderFor("createdAt");
         Sort.Order idOrder = pageable.getSort().getOrderFor("id");
         assertThat(query.keyword()).isNull();
+        assertThat(query.contentKeyword()).isNull();
         assertThat(query.authorId()).isNull();
         assertThat(query.createdFrom()).isNull();
         assertThat(query.createdTo()).isNull();
@@ -138,6 +139,7 @@ class PostControllerTest {
         // when & then
         mockMvc.perform(get("/api/posts")
                         .param("keyword", " Spring ")
+                        .param("contentKeyword", " QueryDSL ")
                         .param("authorId", "3")
                         .param("createdFrom", "2026-01-01T00:00:00")
                         .param("createdTo", "2026-01-31T23:59:59"))
@@ -148,6 +150,7 @@ class PostControllerTest {
 
         PostSearchQuery query = queryCaptor.getValue();
         assertThat(query.keyword()).isEqualTo("Spring");
+        assertThat(query.contentKeyword()).isEqualTo("QueryDSL");
         assertThat(query.authorId()).isEqualTo(3L);
         assertThat(query.createdFrom()).isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0));
         assertThat(query.createdTo()).isEqualTo(LocalDateTime.of(2026, 1, 31, 23, 59, 59));

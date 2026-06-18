@@ -4,8 +4,13 @@ spring:
     username: "${SPRING_DATASOURCE_USERNAME:spring}"
     password: "${SPRING_DATASOURCE_PASSWORD:spring}"
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: "${SPRING_JPA_HIBERNATE_DDL_AUTO:update}"
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/mysql/post-fulltext-index.sql
 
 jwt:
   secret: "${JWT_SECRET:spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that}"
