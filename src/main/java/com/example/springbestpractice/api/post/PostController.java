@@ -5,6 +5,7 @@ import com.example.springbestpractice.application.post.command.PostCreateCommand
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
+import com.example.springbestpractice.application.post.dto.PostDetailResponse;
 import com.example.springbestpractice.application.post.dto.PostPageRequest;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
@@ -39,8 +40,8 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public PostResponse getPost(@PathVariable Long id) {
-        return postService.getPost(id);
+    public PostDetailResponse getPost(@PathVariable Long id, @CurrentUser LoginUser loginUser) {
+        return postService.getPost(id, loginUser);
     }
 
     @PutMapping("/{id}")

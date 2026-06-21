@@ -4,6 +4,7 @@ import com.example.springbestpractice.application.post.command.PostCreateCommand
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.command.PostUpdateCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
+import com.example.springbestpractice.application.post.dto.PostDetailResponse;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.dto.PageResponse;
@@ -91,7 +92,7 @@ class PostServiceTest {
             given(postRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.getPost(999L))
+            assertThatThrownBy(() -> postService.getPost(999L, loginUser))
                     .isInstanceOf(PostNotFoundException.class);
         }
 
@@ -100,12 +101,14 @@ class PostServiceTest {
         void returnPostResponse() {
             // given
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
+            given(postLikeRepository.existsByPostIdAndUserId(1L, loginUser.id())).willReturn(true);
 
             // when
-            PostResponse result = postService.getPost(1L);
+            PostDetailResponse result = postService.getPost(1L, loginUser);
 
             // then
             assertThat(result.title()).isEqualTo("title");
+            assertThat(result.liked()).isTrue();
         }
     }
 
@@ -125,6 +128,9 @@ class PostServiceTest {
         assertThat(result.content()).hasSize(2)
                 .extracting("title")
                 .containsExactly("title", "제목2");
+        assertThat(result.content())
+                .extracting("likeCount")
+                .containsExactly(0L, 0L);
         assertThat(result.totalElements()).isEqualTo(2);
     }
 

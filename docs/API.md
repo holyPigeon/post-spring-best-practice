@@ -421,6 +421,8 @@ Error:
 
 ## Post API
 
+게시글 생성, 목록, 수정 응답은 `likeCount`만 포함합니다. 현재 로그인 사용자의 좋아요 여부인 `liked`는 게시글 상세 조회에서만 제공합니다.
+
 ### 게시글 생성
 
 `POST /api/posts`
@@ -503,6 +505,7 @@ Response:
 
 - 인증: 필요 (USER/ADMIN)
 - 성공 status: `200 OK`
+- `liked`는 현재 로그인 사용자가 해당 게시글에 좋아요를 눌렀는지 여부입니다.
 
 Path variables:
 
@@ -519,6 +522,7 @@ Response:
   "content": "내용",
   "author": "테스터",
   "likeCount": 3,
+  "liked": true,
   "createdAt": "2026-05-16T10:30:00",
   "updatedAt": "2026-05-16T10:30:00"
 }
