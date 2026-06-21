@@ -35,8 +35,6 @@ spring:
         highlight_sql: "${HIBERNATE_HIGHLIGHT_SQL:false}"
   jackson:
     time-zone: "${APP_TIME_ZONE:Asia/Seoul}"
-    serialization:
-      write-dates-as-timestamps: false
 
 management:
   endpoints:
