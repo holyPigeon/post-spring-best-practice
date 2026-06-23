@@ -3,9 +3,11 @@ package com.example.springbestpractice.api.post;
 import com.example.springbestpractice.application.post.PostService;
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.dto.PostCreateRequest;
+import com.example.springbestpractice.application.post.dto.PostDetailResponse;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.dto.PageResponse;
+import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
 import com.example.springbestpractice.infrastructure.security.CurrentUserArgumentResolver;
@@ -150,11 +152,26 @@ class PostControllerTest {
     @DisplayName("GET /api/posts/{id} - 없으면 404를 반환한다")
     void getPostNotFound() throws Exception {
         // given
-        given(postService.getPost(999L)).willThrow(new PostNotFoundException(999L));
+        given(postService.getPost(any(Long.class), any(LoginUser.class))).willThrow(new PostNotFoundException(999L));
 
         // when & then
         mockMvc.perform(get("/api/posts/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/posts/{id} - 상세 조회에서는 좋아요 여부를 반환한다")
+    void getPost() throws Exception {
+        // given
+        given(postService.getPost(any(Long.class), any(LoginUser.class)))
+                .willReturn(new PostDetailResponse(1L, "제목", "내용", "작성자", 3, true, null, null));
+
+        // when & then
+        mockMvc.perform(get("/api/posts/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("제목"))
+                .andExpect(jsonPath("$.likeCount").value(3))
+                .andExpect(jsonPath("$.liked").value(true));
     }
 
     @Test

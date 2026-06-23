@@ -3,6 +3,7 @@ package com.example.springbestpractice.application.post;
 import com.example.springbestpractice.application.post.command.PostCreateCommand;
 import com.example.springbestpractice.application.post.command.PostDeleteCommand;
 import com.example.springbestpractice.application.post.command.PostUpdateCommand;
+import com.example.springbestpractice.application.post.dto.PostDetailResponse;
 import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
@@ -33,9 +34,10 @@ public class PostService {
         return PostResponse.from(postRepository.save(post));
     }
 
-    public PostResponse getPost(Long id) {
+    public PostDetailResponse getPost(Long id, LoginUser loginUser) {
         Post post = getPostById(id);
-        return PostResponse.from(post);
+        boolean liked = postLikeRepository.existsByPostIdAndUserId(id, loginUser.id());
+        return PostDetailResponse.from(post, liked);
     }
 
     public PageResponse<PostResponse> getPosts(Pageable pageable) {
