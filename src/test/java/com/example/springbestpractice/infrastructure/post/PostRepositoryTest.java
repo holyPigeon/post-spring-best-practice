@@ -1,6 +1,7 @@
 package com.example.springbestpractice.infrastructure.post;
 
 import com.example.springbestpractice.domain.post.Post;
+import com.example.springbestpractice.domain.post.PostLike;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,59 +26,43 @@ class PostRepositoryTest {
     TestEntityManager em;
 
     @Test
-    @DisplayName("increase like count atomically")
-    void increaseLikeCount() {
+    @DisplayName("sync like count to match like rows")
+    void syncLikeCount() {
         // given
         Post post = em.persist(Post.create("title", "content", 1L, "writer"));
+        em.persist(PostLike.create(post, 2L));
+        em.persist(PostLike.create(post, 3L));
         em.flush();
         em.clear();
 
         // when
-        int updatedCount = postRepository.increaseLikeCount(post.getId());
+        int updatedCount = postRepository.syncLikeCount(post.getId());
         em.flush();
         em.clear();
 
         // then
         assertThat(updatedCount).isEqualTo(1);
-        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(1);
+        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(2);
     }
 
     @Test
-    @DisplayName("decrease like count atomically")
-    void decreaseLikeCount() {
+    @DisplayName("sync like count down when like rows were removed")
+    void syncLikeCountDown() {
         // given
         Post post = em.persist(Post.create("title", "content", 1L, "writer"));
         em.flush();
-        em.clear();
-        postRepository.increaseLikeCount(post.getId());
-        em.flush();
+        em.getEntityManager().createQuery("update Post p set p.likeCount = 5 where p.id = :id")
+                .setParameter("id", post.getId())
+                .executeUpdate();
         em.clear();
 
         // when
-        int updatedCount = postRepository.decreaseLikeCount(post.getId());
+        int updatedCount = postRepository.syncLikeCount(post.getId());
         em.flush();
         em.clear();
 
         // then
         assertThat(updatedCount).isEqualTo(1);
-        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isZero();
-    }
-
-    @Test
-    @DisplayName("do not decrease like count below zero")
-    void doNotDecreaseLikeCountBelowZero() {
-        // given
-        Post post = em.persist(Post.create("title", "content", 1L, "writer"));
-        em.flush();
-        em.clear();
-
-        // when
-        int updatedCount = postRepository.decreaseLikeCount(post.getId());
-        em.flush();
-        em.clear();
-
-        // then
-        assertThat(updatedCount).isZero();
         assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isZero();
     }
 

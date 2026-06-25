@@ -5,11 +5,11 @@ import com.example.springbestpractice.application.post.command.PostLikeDeleteCom
 import com.example.springbestpractice.application.post.dto.PostLikeResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
-import com.example.springbestpractice.domain.post.PostLike;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,17 +20,18 @@ public class PostLikeService {
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostLikeWriter postLikeWriter;
 
     @Transactional
     public PostLikeResponse like(PostLikeCreateCommand command) {
         LoginUser loginUser = command.loginUser();
         Post post = getPost(command.postId());
-        if (postLikeRepository.existsByPostIdAndUserId(post.getId(), loginUser.id())) {
-            return PostLikeResponse.liked(post);
+        try {
+            postLikeWriter.insert(post.getId(), loginUser.id());
+        } catch (DataIntegrityViolationException alreadyLiked) {
+            // 유니크 제약 위반 = 이미 좋아요한 상태 → 멱등 무시
         }
-
-        postLikeRepository.save(PostLike.create(post, loginUser.id()));
-        postRepository.increaseLikeCount(post.getId());
+        postRepository.syncLikeCount(post.getId());
         return PostLikeResponse.liked(getPost(post.getId()));
     }
 
@@ -38,12 +39,9 @@ public class PostLikeService {
     public PostLikeResponse unlike(PostLikeDeleteCommand command) {
         LoginUser loginUser = command.loginUser();
         Post post = getPost(command.postId());
-        int deletedCount = postLikeRepository.deleteByPostIdAndUserId(post.getId(), loginUser.id());
-        if (deletedCount > 0) {
-            postRepository.decreaseLikeCount(post.getId());
-            return PostLikeResponse.unliked(getPost(post.getId()));
-        }
-        return PostLikeResponse.unliked(post);
+        postLikeRepository.deleteByPostIdAndUserId(post.getId(), loginUser.id());
+        postRepository.syncLikeCount(post.getId());
+        return PostLikeResponse.unliked(getPost(post.getId()));
     }
 
     private Post getPost(Long postId) {

@@ -5,7 +5,6 @@ import com.example.springbestpractice.application.post.command.PostLikeDeleteCom
 import com.example.springbestpractice.application.post.dto.PostLikeResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
-import com.example.springbestpractice.domain.post.PostLike;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
@@ -15,18 +14,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 
 @DisplayName("Post like service")
@@ -38,6 +36,9 @@ class PostLikeServiceTest {
 
     @Mock
     PostLikeRepository postLikeRepository;
+
+    @Mock
+    PostLikeWriter postLikeWriter;
 
     @InjectMocks
     PostLikeService postLikeService;
@@ -56,45 +57,40 @@ class PostLikeServiceTest {
     class Like {
 
         @Test
-        @DisplayName("save like and increase post like count")
+        @DisplayName("insert like and sync post like count")
         void likePost() {
             // given
             Post likedPost = PostFixture.postWithLikeCount(1L, 1L);
             given(postRepository.findById(1L)).willReturn(Optional.of(post), Optional.of(likedPost));
-            given(postLikeRepository.existsByPostIdAndUserId(1L, 2L)).willReturn(false);
 
             // when
             PostLikeResponse result = postLikeService.like(PostLikeCreateCommand.from(1L, loginUser));
 
             // then
-            ArgumentCaptor<PostLike> postLikeCaptor = ArgumentCaptor.forClass(PostLike.class);
-            verify(postLikeRepository).save(postLikeCaptor.capture());
-            assertThat(postLikeCaptor.getValue())
-                    .extracting("post", "userId")
-                    .containsExactly(post, 2L);
-            verify(postRepository).increaseLikeCount(1L);
+            verify(postLikeWriter).insert(1L, 2L);
+            verify(postRepository).syncLikeCount(1L);
             assertThat(result)
                     .extracting("postId", "likeCount", "liked")
                     .containsExactly(1L, 1L, true);
         }
 
         @Test
-        @DisplayName("return current state when already liked")
-        void returnCurrentStateWhenAlreadyLiked() {
+        @DisplayName("stay idempotent and still sync count when already liked")
+        void likeIdempotent() {
             // given
-            post = PostFixture.postWithLikeCount(1L, 1L);
-            given(postRepository.findById(1L)).willReturn(Optional.of(post));
-            given(postLikeRepository.existsByPostIdAndUserId(1L, 2L)).willReturn(true);
+            Post likedPost = PostFixture.postWithLikeCount(1L, 1L);
+            given(postRepository.findById(1L)).willReturn(Optional.of(post), Optional.of(likedPost));
+            willThrow(new DataIntegrityViolationException("duplicate"))
+                    .given(postLikeWriter).insert(1L, 2L);
 
             // when
             PostLikeResponse result = postLikeService.like(PostLikeCreateCommand.from(1L, loginUser));
 
             // then
+            verify(postRepository).syncLikeCount(1L);
             assertThat(result)
                     .extracting("postId", "likeCount", "liked")
                     .containsExactly(1L, 1L, true);
-            verify(postLikeRepository, never()).save(any(PostLike.class));
-            verify(postRepository, never()).increaseLikeCount(1L);
         }
 
         @Test
@@ -114,40 +110,22 @@ class PostLikeServiceTest {
     class Unlike {
 
         @Test
-        @DisplayName("delete like and decrease post like count")
+        @DisplayName("delete like and sync post like count")
         void unlikePost() {
             // given
             post = PostFixture.postWithLikeCount(1L, 1L);
             Post unlikedPost = PostFixture.postWithId(1L);
             given(postRepository.findById(1L)).willReturn(Optional.of(post), Optional.of(unlikedPost));
-            given(postLikeRepository.deleteByPostIdAndUserId(1L, 2L)).willReturn(1);
 
             // when
             PostLikeResponse result = postLikeService.unlike(PostLikeDeleteCommand.from(1L, loginUser));
 
             // then
+            verify(postLikeRepository).deleteByPostIdAndUserId(1L, 2L);
+            verify(postRepository).syncLikeCount(1L);
             assertThat(result)
                     .extracting("postId", "likeCount", "liked")
                     .containsExactly(1L, 0L, false);
-            verify(postRepository).decreaseLikeCount(1L);
-        }
-
-        @Test
-        @DisplayName("return current state when not liked")
-        void returnCurrentStateWhenNotLiked() {
-            // given
-            given(postRepository.findById(1L)).willReturn(Optional.of(post));
-            given(postLikeRepository.deleteByPostIdAndUserId(1L, 2L)).willReturn(0);
-
-            // when
-            PostLikeResponse result = postLikeService.unlike(PostLikeDeleteCommand.from(1L, loginUser));
-
-            // then
-            assertThat(result)
-                    .extracting("postId", "likeCount", "liked")
-                    .containsExactly(1L, 0L, false);
-            verify(postRepository, never()).decreaseLikeCount(1L);
-            verify(postLikeRepository, never()).delete(any(PostLike.class));
         }
     }
 }
