@@ -50,7 +50,7 @@ class PostLikeRedisRepositoryTest {
         redisTemplate = new StringRedisTemplate(connectionFactory);
         redisTemplate.afterPropertiesSet();
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
-        repository = new PostLikeRedisRepository(redisTemplate, "test-group");
+        repository = new PostLikeRedisRepository(redisTemplate, "test-group", 1000L);
     }
 
     @Test
@@ -113,6 +113,23 @@ class PostLikeRedisRepositoryTest {
                         tuple(PostLikeOperation.UNLIKE, 1L, 2L));
 
         repository.ack(changes);
+        assertThat(repository.poll(100)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("ack 전에 죽으면 다음 poll이 미ack 엔트리를 재처리한다(크래시 복구)")
+    void pollReprocessesUnackedOnRecovery() {
+        repository.like(1L, 2L);
+
+        List<PostLikeChange> delivered = repository.poll(100); // ack 없이 '크래시'
+        assertThat(delivered).hasSize(1);
+
+        List<PostLikeChange> recovered = repository.poll(100); // PEL 재처리
+        assertThat(recovered)
+                .extracting(PostLikeChange::recordId)
+                .isEqualTo(delivered.stream().map(PostLikeChange::recordId).toList());
+
+        repository.ack(recovered);
         assertThat(repository.poll(100)).isEmpty();
     }
 

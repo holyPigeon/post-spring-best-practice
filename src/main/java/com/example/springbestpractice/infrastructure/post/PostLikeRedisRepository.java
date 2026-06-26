@@ -33,10 +33,11 @@ public class PostLikeRedisRepository {
     private static final String CHANGES_STREAM_KEY = "post:like:changes";
     private static final String CONSUMER_NAME = "writeback";
 
+    // ARGV[1]=userId, ARGV[2]=postId, ARGV[3]=stream MAXLEN(근사 상한, 워커가 크게 밀릴 때만 작동하는 안전장치)
     private static final RedisScript<Long> LIKE_SCRIPT = new DefaultRedisScript<>("""
             local added = redis.call('SADD', KEYS[1], ARGV[1])
             if added == 1 then
-              redis.call('XADD', KEYS[2], '*', 'op', 'LIKE', 'postId', ARGV[2], 'userId', ARGV[1])
+              redis.call('XADD', KEYS[2], 'MAXLEN', '~', ARGV[3], '*', 'op', 'LIKE', 'postId', ARGV[2], 'userId', ARGV[1])
             end
             return redis.call('SCARD', KEYS[1])
             """, Long.class);
@@ -44,18 +45,21 @@ public class PostLikeRedisRepository {
     private static final RedisScript<Long> UNLIKE_SCRIPT = new DefaultRedisScript<>("""
             local removed = redis.call('SREM', KEYS[1], ARGV[1])
             if removed == 1 then
-              redis.call('XADD', KEYS[2], '*', 'op', 'UNLIKE', 'postId', ARGV[2], 'userId', ARGV[1])
+              redis.call('XADD', KEYS[2], 'MAXLEN', '~', ARGV[3], '*', 'op', 'UNLIKE', 'postId', ARGV[2], 'userId', ARGV[1])
             end
             return redis.call('SCARD', KEYS[1])
             """, Long.class);
 
     private final StringRedisTemplate redisTemplate;
     private final String consumerGroup;
+    private final long streamMaxLen;
 
     public PostLikeRedisRepository(StringRedisTemplate redisTemplate,
-                                   @Value("${app.post-like.consumer-group}") String consumerGroup) {
+                                   @Value("${app.post-like.consumer-group}") String consumerGroup,
+                                   @Value("${app.post-like.stream-max-len}") long streamMaxLen) {
         this.redisTemplate = redisTemplate;
         this.consumerGroup = consumerGroup;
+        this.streamMaxLen = streamMaxLen;
     }
 
     /** 좋아요를 멤버십에 추가하고(신규일 때만 변경 이벤트 적재) 현재 카운트를 반환한다. */
@@ -97,17 +101,28 @@ public class PostLikeRedisRepository {
         redisTemplate.delete(List.of(membersKey(postId), loadedKey(postId)));
     }
 
-    /** 변경 이벤트를 배치로 소비한다. 새 스트림/그룹은 필요 시 생성한다. */
+    /**
+     * 변경 이벤트를 배치로 소비한다. 새 스트림/그룹은 필요 시 생성한다.
+     * 크래시 복구: 신규('>')보다 먼저 이 컨슈머의 미ack(PEL) 엔트리를 재처리해, persist 후 ack 직전에 죽어도 유실이 없게 한다.
+     */
     public List<PostLikeChange> poll(int batchSize) {
         if (!Boolean.TRUE.equals(redisTemplate.hasKey(CHANGES_STREAM_KEY))) {
             return List.of();
         }
         ensureGroup();
         StreamOperations<String, Object, Object> streamOps = redisTemplate.opsForStream();
+        List<PostLikeChange> pending = read(streamOps, batchSize, ReadOffset.from("0"));
+        if (!pending.isEmpty()) {
+            return pending;
+        }
+        return read(streamOps, batchSize, ReadOffset.lastConsumed());
+    }
+
+    private List<PostLikeChange> read(StreamOperations<String, Object, Object> streamOps, int batchSize, ReadOffset offset) {
         List<MapRecord<String, Object, Object>> records = streamOps.read(
                 Consumer.from(consumerGroup, CONSUMER_NAME),
                 StreamReadOptions.empty().count(batchSize),
-                StreamOffset.create(CHANGES_STREAM_KEY, ReadOffset.lastConsumed()));
+                StreamOffset.create(CHANGES_STREAM_KEY, offset));
         if (records == null || records.isEmpty()) {
             return List.of();
         }
@@ -139,7 +154,7 @@ public class PostLikeRedisRepository {
         Long count = redisTemplate.execute(
                 script,
                 List.of(membersKey(postId), CHANGES_STREAM_KEY),
-                String.valueOf(userId), String.valueOf(postId));
+                String.valueOf(userId), String.valueOf(postId), String.valueOf(streamMaxLen));
         return count == null ? 0L : count;
     }
 
