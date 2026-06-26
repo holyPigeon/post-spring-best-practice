@@ -2,10 +2,11 @@ package com.example.springbestpractice.infrastructure.post;
 
 import com.example.springbestpractice.domain.post.PostLike;
 import com.example.springbestpractice.support.fixture.PostFixture;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,8 +31,13 @@ class PostLikeWriteBackProcessorTest {
     @Mock
     PostRepository postRepository;
 
-    @InjectMocks
     PostLikeWriteBackProcessor processor;
+
+    @BeforeEach
+    void setUp() {
+        processor = new PostLikeWriteBackProcessor(
+                postLikeRedisRepository, postLikeRepository, postRepository, new SimpleMeterRegistry());
+    }
 
     @Test
     @DisplayName("LIKE 이벤트는 post_likes에 멱등 저장하고 컬럼을 Redis 카운트로 동기화한다")

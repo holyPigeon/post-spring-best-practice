@@ -1,6 +1,7 @@
 package com.example.springbestpractice.infrastructure.post;
 
 import com.example.springbestpractice.domain.post.PostLike;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,15 +18,19 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class PostLikeWriteBackProcessor {
 
+    private static final String PERSISTED_METRIC = "post_like.persisted";
+
     private final PostLikeRedisRepository postLikeRedisRepository;
     private final PostLikeRepository postLikeRepository;
     private final PostRepository postRepository;
+    private final MeterRegistry meterRegistry;
 
     @Transactional
     public void persist(List<PostLikeChange> changes) {
         Set<Long> affectedPostIds = new LinkedHashSet<>();
         for (PostLikeChange change : changes) {
             apply(change);
+            meterRegistry.counter(PERSISTED_METRIC, "op", change.operation().name()).increment();
             affectedPostIds.add(change.postId());
         }
         for (Long postId : affectedPostIds) {
