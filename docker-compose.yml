@@ -12,6 +12,8 @@ services:
       SPRING_DATASOURCE_USERNAME: "${SPRING_DATASOURCE_USERNAME:-spring}"
       SPRING_DATASOURCE_PASSWORD: "${SPRING_DATASOURCE_PASSWORD:-spring}"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}"
+      SPRING_DATA_REDIS_HOST: "${SPRING_DATA_REDIS_HOST:-redis}"
+      SPRING_DATA_REDIS_PORT: "${SPRING_DATA_REDIS_PORT:-6379}"
       DB_POOL_MAX_SIZE: "${DB_POOL_MAX_SIZE:-10}"
       DB_POOL_MIN_IDLE: "${DB_POOL_MIN_IDLE:-2}"
       DB_CONNECTION_TIMEOUT: "${DB_CONNECTION_TIMEOUT:-30000}"
@@ -22,6 +24,8 @@ services:
       JWT_REFRESH_TOKEN_EXPIRATION: "${JWT_REFRESH_TOKEN_EXPIRATION:-604800000}"
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:$${SERVER_PORT:-8080}/actuator/health | grep -q '\"status\":\"UP\"'"]
@@ -61,8 +65,27 @@ services:
       - backend
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    stop_grace_period: 30s
+    networks:
+      - backend
+    restart: unless-stopped
+
 volumes:
   mysql-data:
+  redis-data:
 
 networks:
   backend:

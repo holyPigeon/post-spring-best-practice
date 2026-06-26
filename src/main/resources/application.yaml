@@ -37,6 +37,16 @@ spring:
     time-zone: "${APP_TIME_ZONE:Asia/Seoul}"
     serialization:
       write-dates-as-timestamps: false
+  data:
+    redis:
+      host: "${SPRING_DATA_REDIS_HOST:localhost}"
+      port: "${SPRING_DATA_REDIS_PORT:6379}"
+
+app:
+  post-like:
+    flush-interval-ms: "${POST_LIKE_FLUSH_INTERVAL_MS:2000}"
+    flush-batch-size: "${POST_LIKE_FLUSH_BATCH_SIZE:500}"
+    consumer-group: "${POST_LIKE_CONSUMER_GROUP:post-like-writeback}"
 
 management:
   endpoints:
