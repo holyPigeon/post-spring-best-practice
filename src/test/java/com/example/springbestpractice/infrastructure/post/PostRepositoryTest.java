@@ -25,60 +25,21 @@ class PostRepositoryTest {
     TestEntityManager em;
 
     @Test
-    @DisplayName("increase like count atomically")
-    void increaseLikeCount() {
+    @DisplayName("update like count to an absolute value")
+    void updateLikeCount() {
         // given
         Post post = em.persist(Post.create("title", "content", 1L, "writer"));
         em.flush();
         em.clear();
 
         // when
-        int updatedCount = postRepository.increaseLikeCount(post.getId());
+        int updatedRows = postRepository.updateLikeCount(post.getId(), 42L);
         em.flush();
         em.clear();
 
         // then
-        assertThat(updatedCount).isEqualTo(1);
-        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("decrease like count atomically")
-    void decreaseLikeCount() {
-        // given
-        Post post = em.persist(Post.create("title", "content", 1L, "writer"));
-        em.flush();
-        em.clear();
-        postRepository.increaseLikeCount(post.getId());
-        em.flush();
-        em.clear();
-
-        // when
-        int updatedCount = postRepository.decreaseLikeCount(post.getId());
-        em.flush();
-        em.clear();
-
-        // then
-        assertThat(updatedCount).isEqualTo(1);
-        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isZero();
-    }
-
-    @Test
-    @DisplayName("do not decrease like count below zero")
-    void doNotDecreaseLikeCountBelowZero() {
-        // given
-        Post post = em.persist(Post.create("title", "content", 1L, "writer"));
-        em.flush();
-        em.clear();
-
-        // when
-        int updatedCount = postRepository.decreaseLikeCount(post.getId());
-        em.flush();
-        em.clear();
-
-        // then
-        assertThat(updatedCount).isZero();
-        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isZero();
+        assertThat(updatedRows).isEqualTo(1);
+        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(42);
     }
 
     @Test

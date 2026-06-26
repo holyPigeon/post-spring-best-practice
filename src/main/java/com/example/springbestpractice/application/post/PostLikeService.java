@@ -3,10 +3,8 @@ package com.example.springbestpractice.application.post;
 import com.example.springbestpractice.application.post.command.PostLikeCreateCommand;
 import com.example.springbestpractice.application.post.command.PostLikeDeleteCommand;
 import com.example.springbestpractice.application.post.dto.PostLikeResponse;
-import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.domain.post.Post;
-import com.example.springbestpractice.domain.post.PostLike;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
+import com.example.springbestpractice.infrastructure.post.PostLikeRedisRepository;
 import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,34 +18,30 @@ public class PostLikeService {
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostLikeRedisRepository postLikeRedisRepository;
 
-    @Transactional
     public PostLikeResponse like(PostLikeCreateCommand command) {
-        LoginUser loginUser = command.loginUser();
-        Post post = getPost(command.postId());
-        if (postLikeRepository.existsByPostIdAndUserId(post.getId(), loginUser.id())) {
-            return PostLikeResponse.liked(post);
-        }
-
-        postLikeRepository.save(PostLike.create(post, loginUser.id()));
-        postRepository.increaseLikeCount(post.getId());
-        return PostLikeResponse.liked(getPost(post.getId()));
+        Long postId = requireExistingPost(command.postId());
+        ensureMembershipLoaded(postId);
+        long count = postLikeRedisRepository.like(postId, command.loginUser().id());
+        return PostLikeResponse.liked(postId, count);
     }
 
-    @Transactional
     public PostLikeResponse unlike(PostLikeDeleteCommand command) {
-        LoginUser loginUser = command.loginUser();
-        Post post = getPost(command.postId());
-        int deletedCount = postLikeRepository.deleteByPostIdAndUserId(post.getId(), loginUser.id());
-        if (deletedCount > 0) {
-            postRepository.decreaseLikeCount(post.getId());
-            return PostLikeResponse.unliked(getPost(post.getId()));
-        }
-        return PostLikeResponse.unliked(post);
+        Long postId = requireExistingPost(command.postId());
+        ensureMembershipLoaded(postId);
+        long count = postLikeRedisRepository.unlike(postId, command.loginUser().id());
+        return PostLikeResponse.unliked(postId, count);
     }
 
-    private Post getPost(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException(postId));
+    private void ensureMembershipLoaded(Long postId) {
+        postLikeRedisRepository.ensureLoaded(postId, () -> postLikeRepository.findUserIdsByPostId(postId));
+    }
+
+    private Long requireExistingPost(Long postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new PostNotFoundException(postId);
+        }
+        return postId;
     }
 }
