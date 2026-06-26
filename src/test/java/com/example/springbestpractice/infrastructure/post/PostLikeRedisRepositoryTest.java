@@ -50,7 +50,7 @@ class PostLikeRedisRepositoryTest {
         redisTemplate = new StringRedisTemplate(connectionFactory);
         redisTemplate.afterPropertiesSet();
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
-        repository = new PostLikeRedisRepository(redisTemplate, "test-group", 1000L);
+        repository = new PostLikeRedisRepository(redisTemplate, "test-group", 1000L, 3600L);
     }
 
     @Test
@@ -131,6 +131,16 @@ class PostLikeRedisRepositoryTest {
 
         repository.ack(recovered);
         assertThat(repository.poll(100)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("쓰기 시 멤버십/플래그에 TTL이 걸려 idle 글이 회수될 수 있다")
+    void writeSetsTtl() {
+        repository.ensureLoaded(1L, List::of);
+        repository.like(1L, 2L);
+
+        assertThat(redisTemplate.getExpire("post:like:users:1")).isPositive();
+        assertThat(redisTemplate.getExpire("post:like:loaded:1")).isPositive();
     }
 
     @Test

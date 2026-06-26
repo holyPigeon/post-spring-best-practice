@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,12 +34,16 @@ public class PostLikeRedisRepository {
     private static final String CHANGES_STREAM_KEY = "post:like:changes";
     private static final String CONSUMER_NAME = "writeback";
 
-    // ARGV[1]=userId, ARGV[2]=postId, ARGV[3]=stream MAXLEN(근사 상한, 워커가 크게 밀릴 때만 작동하는 안전장치)
+    // KEYS[1]=members, KEYS[2]=stream, KEYS[3]=loaded flag
+    // ARGV[1]=userId, ARGV[2]=postId, ARGV[3]=stream MAXLEN(근사 상한), ARGV[4]=set TTL(초)
+    // 쓰기마다 members/loaded TTL을 갱신해 활성 글은 유지, idle 글만 만료(메모리 회수)되게 한다.
     private static final RedisScript<Long> LIKE_SCRIPT = new DefaultRedisScript<>("""
             local added = redis.call('SADD', KEYS[1], ARGV[1])
             if added == 1 then
               redis.call('XADD', KEYS[2], 'MAXLEN', '~', ARGV[3], '*', 'op', 'LIKE', 'postId', ARGV[2], 'userId', ARGV[1])
             end
+            redis.call('EXPIRE', KEYS[1], ARGV[4])
+            redis.call('EXPIRE', KEYS[3], ARGV[4])
             return redis.call('SCARD', KEYS[1])
             """, Long.class);
 
@@ -47,19 +52,24 @@ public class PostLikeRedisRepository {
             if removed == 1 then
               redis.call('XADD', KEYS[2], 'MAXLEN', '~', ARGV[3], '*', 'op', 'UNLIKE', 'postId', ARGV[2], 'userId', ARGV[1])
             end
+            redis.call('EXPIRE', KEYS[1], ARGV[4])
+            redis.call('EXPIRE', KEYS[3], ARGV[4])
             return redis.call('SCARD', KEYS[1])
             """, Long.class);
 
     private final StringRedisTemplate redisTemplate;
     private final String consumerGroup;
     private final long streamMaxLen;
+    private final Duration setTtl;
 
     public PostLikeRedisRepository(StringRedisTemplate redisTemplate,
                                    @Value("${app.post-like.consumer-group}") String consumerGroup,
-                                   @Value("${app.post-like.stream-max-len}") long streamMaxLen) {
+                                   @Value("${app.post-like.stream-max-len}") long streamMaxLen,
+                                   @Value("${app.post-like.set-ttl-seconds}") long setTtlSeconds) {
         this.redisTemplate = redisTemplate;
         this.consumerGroup = consumerGroup;
         this.streamMaxLen = streamMaxLen;
+        this.setTtl = Duration.ofSeconds(setTtlSeconds);
     }
 
     /** 좋아요를 멤버십에 추가하고(신규일 때만 변경 이벤트 적재) 현재 카운트를 반환한다. */
@@ -82,7 +92,11 @@ public class PostLikeRedisRepository {
                 redisTemplate.opsForSet().isMember(membersKey(postId), String.valueOf(userId)));
     }
 
-    /** 멤버십 Set이 아직 적재되지 않았으면 DB의 라이커를 적재한다. (적재 여부는 별도 플래그 키로 구분) */
+    /**
+     * 멤버십 Set이 아직 적재되지 않았으면 DB의 라이커를 적재한다. (적재 여부는 별도 플래그 키로 구분)
+     * Set/플래그에 TTL을 걸어 idle 글의 메모리를 회수한다. 만료는 쓰기가 TTL 동안 없었다는 뜻이고,
+     * flush 간격 ≪ TTL 이므로 만료 시점엔 이미 영속화가 끝나 DB에서의 재적재가 안전하다(취소 부활 없음).
+     */
     public void ensureLoaded(Long postId, Supplier<List<Long>> dbLoader) {
         String loadedKey = loadedKey(postId);
         if (Boolean.TRUE.equals(redisTemplate.hasKey(loadedKey))) {
@@ -92,8 +106,9 @@ public class PostLikeRedisRepository {
         if (!userIds.isEmpty()) {
             String[] members = userIds.stream().map(String::valueOf).toArray(String[]::new);
             redisTemplate.opsForSet().add(membersKey(postId), members);
+            redisTemplate.expire(membersKey(postId), setTtl);
         }
-        redisTemplate.opsForValue().set(loadedKey, "1");
+        redisTemplate.opsForValue().set(loadedKey, "1", setTtl);
     }
 
     /** 게시글 삭제 시 멤버십/플래그 키를 제거한다. (이후 좋아요는 게시글 존재 검증에서 차단되므로 부활 위험 없음) */
@@ -153,8 +168,9 @@ public class PostLikeRedisRepository {
     private long runChange(RedisScript<Long> script, Long postId, Long userId) {
         Long count = redisTemplate.execute(
                 script,
-                List.of(membersKey(postId), CHANGES_STREAM_KEY),
-                String.valueOf(userId), String.valueOf(postId), String.valueOf(streamMaxLen));
+                List.of(membersKey(postId), CHANGES_STREAM_KEY, loadedKey(postId)),
+                String.valueOf(userId), String.valueOf(postId),
+                String.valueOf(streamMaxLen), String.valueOf(setTtl.toSeconds()));
         return count == null ? 0L : count;
     }
 

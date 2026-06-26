@@ -48,6 +48,7 @@ app:
     flush-batch-size: "${POST_LIKE_FLUSH_BATCH_SIZE:500}"
     consumer-group: "${POST_LIKE_CONSUMER_GROUP:post-like-writeback}"
     stream-max-len: "${POST_LIKE_STREAM_MAX_LEN:1000000}"
+    set-ttl-seconds: "${POST_LIKE_SET_TTL_SECONDS:3600}"
 
 management:
   endpoints:
