@@ -11,3 +11,7 @@ jwt:
   secret: "${JWT_SECRET:spring-best-practice-jwt-secret-key-must-be-256bits-or-longer-than-that}"
   access-token-expiration: "${JWT_ACCESS_TOKEN_EXPIRATION:1800000}"
   refresh-token-expiration: "${JWT_REFRESH_TOKEN_EXPIRATION:604800000}"
+
+cors:
+  allowed-origins:
+    - http://localhost:5173
