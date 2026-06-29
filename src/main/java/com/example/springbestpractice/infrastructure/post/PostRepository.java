@@ -9,10 +9,6 @@ import org.springframework.data.repository.query.Param;
 public interface PostRepository extends JpaRepository<Post, Long>, PostRepositoryCustom {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Post p set p.likeCount = p.likeCount + 1 where p.id = :id")
-    int increaseLikeCount(@Param("id") Long id);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Post p set p.likeCount = p.likeCount - 1 where p.id = :id and p.likeCount > 0")
-    int decreaseLikeCount(@Param("id") Long id);
+    @Query("update Post p set p.likeCount = :count where p.id = :postId")
+    int updateLikeCount(@Param("postId") Long postId, @Param("count") long count);
 }
