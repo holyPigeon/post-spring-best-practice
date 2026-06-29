@@ -74,8 +74,8 @@ class CurrentUserArgumentResolverTest {
 
             // then
             assertThat(result)
-                    .extracting("id", "email", "nickname")
-                    .containsExactly(1L, "test@test.com", "tester");
+                    .extracting("id", "email", "nickname", "role")
+                    .containsExactly(1L, "test@test.com", "tester", "USER");
         }
 
         @Test

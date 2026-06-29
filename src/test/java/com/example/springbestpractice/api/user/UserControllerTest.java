@@ -181,6 +181,6 @@ class UserControllerTest {
     }
 
     private LoginUser loginUser() {
-        return new LoginUser(1L, "test@test.com", "tester");
+        return new LoginUser(1L, "test@test.com", "tester", "USER");
     }
 }

@@ -44,7 +44,7 @@ class PostLikeServiceTest {
 
     @BeforeEach
     void setUp() {
-        loginUser = new LoginUser(2L, "user@test.com", "user");
+        loginUser = new LoginUser(2L, "user@test.com", "user", "USER");
     }
 
     @Nested

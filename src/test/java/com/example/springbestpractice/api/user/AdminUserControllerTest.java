@@ -63,7 +63,8 @@ class AdminUserControllerTest {
     void getUsersForbiddenForUser() throws Exception {
         // when & then
         mockMvc.perform(get("/api/admin/users").with(user("user").roles("USER")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").exists());
 
         verifyNoInteractions(adminUserService);
     }
