@@ -24,17 +24,17 @@ public class AdminUserService {
     }
 
     public AdminUserResponse getUser(Long id) {
-        User user = findUser(id);
+        User user = getUserById(id);
         return AdminUserResponse.from(user);
     }
 
     @Transactional
     public void deleteUser(Long id) {
-        User user = findUser(id);
+        User user = getUserById(id);
         userRepository.delete(user);
     }
 
-    private User findUser(Long id) {
+    private User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }

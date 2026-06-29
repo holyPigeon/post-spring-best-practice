@@ -57,15 +57,14 @@ public class UserService {
     }
 
     private User getCurrentUser(LoginUser loginUser) {
-        LoginUser currentUser = requireLoginUser(loginUser);
-        return userRepository.findById(currentUser.id())
-                .orElseThrow(() -> new UserNotFoundException(currentUser.id()));
+        validateLoginUser(loginUser);
+        return userRepository.findById(loginUser.id())
+                .orElseThrow(() -> new UserNotFoundException(loginUser.id()));
     }
 
-    private LoginUser requireLoginUser(LoginUser loginUser) {
+    private void validateLoginUser(LoginUser loginUser) {
         if (loginUser == null) {
             throw new AccessDeniedException("인증된 사용자 정보가 필요합니다.");
         }
-        return loginUser;
     }
 }
