@@ -10,6 +10,7 @@ import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;
+import com.example.springbestpractice.infrastructure.post.PostLikeRedisRepository;
 import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostLikeRedisRepository postLikeRedisRepository;
 
     @Transactional
     public PostResponse createPost(PostCreateCommand command) {
@@ -35,7 +37,8 @@ public class PostService {
 
     public PostResponse getPost(Long id) {
         Post post = getPostById(id);
-        return PostResponse.from(post);
+        ensureMembershipLoaded(id);
+        return PostResponse.of(post, postLikeRedisRepository.count(id));
     }
 
     public PageResponse<PostResponse> getPosts(PostSearchQuery query) {
@@ -63,6 +66,11 @@ public class PostService {
         postLikeRepository.deleteByPostId(command.id());
         commentRepository.deleteByPostId(command.id());
         postRepository.delete(post);
+        postLikeRedisRepository.evict(command.id());
+    }
+
+    private void ensureMembershipLoaded(Long postId) {
+        postLikeRedisRepository.ensureLoaded(postId, () -> postLikeRepository.findUserIdsByPostId(postId));
     }
 
     private Post getPostById(Long id) {

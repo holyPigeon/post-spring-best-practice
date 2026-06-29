@@ -29,7 +29,7 @@ public class CommentService {
     @Transactional
     public CommentResponse createComment(CommentCreateCommand command) {
         LoginUser author = command.loginUser();
-        Post post = getPost(command.postId());
+        Post post = getPostById(command.postId());
         Comment comment = Comment.create(post, command.content(), author.id(), author.nickname());
         return CommentResponse.from(commentRepository.save(comment));
     }
@@ -63,7 +63,7 @@ public class CommentService {
         commentRepository.delete(comment);
     }
 
-    private Post getPost(Long postId) {
+    private Post getPostById(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException(postId));
     }

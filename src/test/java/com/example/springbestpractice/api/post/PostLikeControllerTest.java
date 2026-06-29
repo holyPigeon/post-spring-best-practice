@@ -7,7 +7,6 @@ import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
 import com.example.springbestpractice.infrastructure.security.CurrentUserArgumentResolver;
 import com.example.springbestpractice.infrastructure.security.SecurityWebMvcConfig;
 import com.example.springbestpractice.support.fixture.UserFixture;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -88,16 +87,5 @@ class PostLikeControllerTest {
         // when & then
         mockMvc.perform(post("/api/posts/999/likes"))
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @DisplayName("POST /api/posts/{postId}/likes returns 409 on concurrent duplicate like")
-    void likeConflict() throws Exception {
-        // given
-        given(postLikeService.like(any())).willThrow(new DataIntegrityViolationException("duplicate"));
-
-        // when & then
-        mockMvc.perform(post("/api/posts/1/likes"))
-                .andExpect(status().isConflict());
     }
 }

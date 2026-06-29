@@ -6,9 +6,14 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     boolean existsByPostIdAndUserId(Long postId, Long userId);
+
+    @Query("select pl.userId from PostLike pl where pl.post.id = :postId")
+    List<Long> findUserIdsByPostId(@Param("postId") Long postId);
 
     @Modifying
     @Query("delete from PostLike pl where pl.post.id = :postId and pl.userId = :userId")

@@ -14,12 +14,16 @@ public record PostResponse(
         LocalDateTime updatedAt
 ) {
     public static PostResponse from(Post post) {
+        return of(post, post.getLikeCount());
+    }
+
+    public static PostResponse of(Post post, long likeCount) {
         return new PostResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
                 post.getAuthorNickname(),
-                post.getLikeCount(),
+                likeCount,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

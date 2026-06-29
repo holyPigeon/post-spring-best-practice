@@ -12,6 +12,7 @@ import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;
+import com.example.springbestpractice.infrastructure.post.PostLikeRedisRepository;
 import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
 import com.example.springbestpractice.infrastructure.post.PostRepository;
 import com.example.springbestpractice.support.fixture.PostFixture;
@@ -50,6 +51,9 @@ class PostServiceTest {
 
     @Mock
     PostLikeRepository postLikeRepository;
+
+    @Mock
+    PostLikeRedisRepository postLikeRedisRepository;
 
     @InjectMocks
     PostService postService;
@@ -97,16 +101,19 @@ class PostServiceTest {
         }
 
         @Test
-        @DisplayName("존재하는 ID면 응답을 반환한다")
+        @DisplayName("존재하는 ID면 Redis 카운트를 담아 응답을 반환한다")
         void returnPostResponse() {
             // given
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
+            given(postLikeRedisRepository.count(1L)).willReturn(7L);
 
             // when
             PostResponse result = postService.getPost(1L);
 
             // then
-            assertThat(result.title()).isEqualTo("title");
+            assertThat(result)
+                    .extracting("title", "likeCount")
+                    .containsExactly("title", 7L);
         }
     }
 
@@ -178,5 +185,6 @@ class PostServiceTest {
         verify(postLikeRepository).deleteByPostId(1L);
         verify(commentRepository).deleteByPostId(1L);
         verify(postRepository).delete(post);
+        verify(postLikeRedisRepository).evict(1L);
     }
 }
