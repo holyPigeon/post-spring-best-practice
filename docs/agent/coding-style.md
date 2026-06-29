@@ -42,6 +42,22 @@ Before adding a defensive check, ask:
 
 > Can this invalid value occur through a normal code path, or should the structure make it impossible?
 
+## Validation Helper Return Values
+
+- A validation or precondition helper returns its argument only to support inline use in an assignment or expression, following `Objects.requireNonNull` and Guava `checkNotNull` (for example `this.title = requireNotBlank(title, "...")`).
+- When the value is already in hand at the call site, make the helper return `void`. Do not return the argument just to reassign it to a local you already have — that return value is dead.
+
+```java
+// Avoid: echoes a value the caller already holds
+Long postId = requireExistingPost(command.postId());
+
+// Prefer: void guard, reuse the value you already have
+Long postId = command.postId();
+validatePostExists(postId);
+```
+
+- Name a `void` invariant check `validateXxx`. Reserve `requireXxx` or `checkXxx` for helpers that return the validated value for inline use.
+
 ## JPA Relationship Rules
 
 - Prefer object relationships when entities collaborate in domain behavior or share the same lifecycle.
@@ -65,6 +81,7 @@ Before adding a defensive check, ask:
 - Entity factories/constructors must validate all domain-required and non-null fields.
 - If an existing entity has `@Builder`, avoid it in new production and test code. Remove it in a separate refactor when practical.
 - Use a Mapper/Assembler or query projection when mapping 2+ aggregates, 3+ scalar extras, current-user permission flags, or high-volume list/search responses.
+- Name static factories by intent: `from` converts from one or more source objects (`PostResponse.from(post)`, `PostSearchQuery.from(condition, pageRequest)`); `of` aggregates an object with extra scalar values (`PostResponse.of(post, likeCount)`).
 
 ## Service And Transaction Rules
 
@@ -72,6 +89,28 @@ Before adding a defensive check, ask:
 - Put `@Transactional` on write methods.
 - Keep services thin. They coordinate repositories, domain methods, and external collaborators.
 - Remember Spring AOP does not apply `@Transactional` to same-class self-invocation.
+
+## Method Naming And Extraction
+
+- Name a lookup that returns `Optional` and lets the caller handle the empty case `findXxx`. Name a lookup that must yield a value and throws when absent `getXxx`. Do not name a throwing lookup `findXxx`. (Spring Data follows this: `findById` returns `Optional`, `getReferenceById` throws.)
+- Use one name for one concept across the codebase. For "load a Post or throw", pick a single name (such as `getPostById`) instead of `getPost` in one service and `getPostById` in another.
+- Keep every statement in a method at one level of abstraction. A use-case method should read as a sequence of intent-revealing steps, not a mix of high-level calls and inline low-level detail.
+- Decide extraction by the semantic distance between what a line does and what it says, not by line count. A one-line wrapper is justified when its name raises the abstraction level (for example `ensureMembershipLoaded(postId)` hiding a supplier lambda). If you would write a comment to explain a block, extract it into a named method instead.
+- Extract a find-or-throw or validation step into a private helper when it is reused, or when inlining it would break the surrounding method's abstraction level. A short chain that already reads at the method's level may stay inline.
+
+Avoid mixing abstraction levels inside a use-case method:
+
+```java
+// Avoid: the middle line drops to a lower abstraction level than its neighbors
+validatePostExists(postId);
+postLikeRedisRepository.ensureLoaded(postId, () -> postLikeRepository.findUserIdsByPostId(postId));
+long count = postLikeRedisRepository.like(postId, userId);
+
+// Prefer: every line reads at the same level
+validatePostExists(postId);
+ensureMembershipLoaded(postId);
+long count = postLikeRedisRepository.like(postId, userId);
+```
 
 ## DTO, Command, And Query Rules
 
