@@ -21,14 +21,16 @@ public class PostLikeService {
     private final PostLikeRedisRepository postLikeRedisRepository;
 
     public PostLikeResponse like(PostLikeCreateCommand command) {
-        Long postId = requireExistingPost(command.postId());
+        Long postId = command.postId();
+        validatePostExists(postId);
         ensureMembershipLoaded(postId);
         long count = postLikeRedisRepository.like(postId, command.loginUser().id());
         return PostLikeResponse.liked(postId, count);
     }
 
     public PostLikeResponse unlike(PostLikeDeleteCommand command) {
-        Long postId = requireExistingPost(command.postId());
+        Long postId = command.postId();
+        validatePostExists(postId);
         ensureMembershipLoaded(postId);
         long count = postLikeRedisRepository.unlike(postId, command.loginUser().id());
         return PostLikeResponse.unliked(postId, count);
@@ -38,10 +40,9 @@ public class PostLikeService {
         postLikeRedisRepository.ensureLoaded(postId, () -> postLikeRepository.findUserIdsByPostId(postId));
     }
 
-    private Long requireExistingPost(Long postId) {
+    private void validatePostExists(Long postId) {
         if (!postRepository.existsById(postId)) {
             throw new PostNotFoundException(postId);
         }
-        return postId;
     }
 }

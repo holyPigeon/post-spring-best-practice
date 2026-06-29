@@ -37,7 +37,7 @@ public class PostService {
 
     public PostResponse getPost(Long id) {
         Post post = getPostById(id);
-        postLikeRedisRepository.ensureLoaded(id, () -> postLikeRepository.findUserIdsByPostId(id));
+        ensureMembershipLoaded(id);
         return PostResponse.of(post, postLikeRedisRepository.count(id));
     }
 
@@ -67,6 +67,10 @@ public class PostService {
         commentRepository.deleteByPostId(command.id());
         postRepository.delete(post);
         postLikeRedisRepository.evict(command.id());
+    }
+
+    private void ensureMembershipLoaded(Long postId) {
+        postLikeRedisRepository.ensureLoaded(postId, () -> postLikeRepository.findUserIdsByPostId(postId));
     }
 
     private Post getPostById(Long id) {
