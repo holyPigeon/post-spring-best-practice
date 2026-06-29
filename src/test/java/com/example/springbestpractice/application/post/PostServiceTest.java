@@ -60,7 +60,7 @@ class PostServiceTest {
     @BeforeEach
     void setUp() {
         post = PostFixture.postWithId(1L);
-        loginUser = new LoginUser(1L, "writer@test.com", "작성자");
+        loginUser = new LoginUser(1L, "writer@test.com", "작성자", "USER");
     }
 
     @Test
@@ -156,7 +156,7 @@ class PostServiceTest {
         void throwExceptionWhenNotOwner() {
             // given
             PostUpdateRequest request = new PostUpdateRequest("새 제목", "새 내용");
-            LoginUser otherUser = new LoginUser(2L, "other@test.com", "다른사용자");
+            LoginUser otherUser = new LoginUser(2L, "other@test.com", "다른사용자", "USER");
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
 
             // when & then

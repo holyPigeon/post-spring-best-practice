@@ -132,7 +132,8 @@ class AuthControllerTest {
             mockMvc.perform(get("/api/auth/me"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1L))
-                    .andExpect(jsonPath("$.email").value("test@test.com"));
+                    .andExpect(jsonPath("$.email").value("test@test.com"))
+                    .andExpect(jsonPath("$.role").value("USER"));
         }
     }
 }

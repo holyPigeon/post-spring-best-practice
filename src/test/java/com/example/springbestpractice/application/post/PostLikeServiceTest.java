@@ -48,7 +48,7 @@ class PostLikeServiceTest {
     @BeforeEach
     void setUp() {
         post = PostFixture.postWithId(1L);
-        loginUser = new LoginUser(2L, "user@test.com", "user");
+        loginUser = new LoginUser(2L, "user@test.com", "user", "USER");
     }
 
     @Nested

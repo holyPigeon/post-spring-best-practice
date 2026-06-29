@@ -259,6 +259,6 @@ class UserServiceTest {
     }
 
     private LoginUser loginUser(Long id) {
-        return new LoginUser(id, "test@test.com", "tester");
+        return new LoginUser(id, "test@test.com", "tester", "USER");
     }
 }

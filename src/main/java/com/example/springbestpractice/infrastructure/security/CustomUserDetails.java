@@ -19,7 +19,7 @@ public class CustomUserDetails implements UserDetails {
     }
 
     public LoginUser toLoginUser() {
-        return new LoginUser(user.getId(), user.getEmail(), user.getNickname());
+        return new LoginUser(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name());
     }
 
     @Override
