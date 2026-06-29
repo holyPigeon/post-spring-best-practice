@@ -1,6 +1,11 @@
 package com.example.springbestpractice.application.user;
 
+import com.example.springbestpractice.application.user.command.AdminUserDeleteCommand;
+import com.example.springbestpractice.application.user.dto.AdminUserPageRequest;
 import com.example.springbestpractice.application.user.dto.AdminUserResponse;
+import com.example.springbestpractice.common.dto.PageResponse;
+import com.example.springbestpractice.common.exception.ConflictException;
+import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
 import com.example.springbestpractice.domain.user.UserRole;
@@ -14,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +28,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @DisplayName("Admin user service")
@@ -48,21 +57,23 @@ class AdminUserServiceTest {
     class GetUsers {
 
         @Test
-        @DisplayName("returns all users")
-        void returnAllUsers() {
+        @DisplayName("returns a page of users")
+        void returnUserPage() {
             // given
-            given(userRepository.findAll()).willReturn(List.of(user, admin));
+            given(userRepository.findAll(any(Pageable.class)))
+                    .willReturn(new PageImpl<>(List.of(user, admin)));
 
             // when
-            List<AdminUserResponse> result = adminUserService.getUsers();
+            PageResponse<AdminUserResponse> result = adminUserService.getUsers(new AdminUserPageRequest(0, 20));
 
             // then
-            assertThat(result).hasSize(2)
+            assertThat(result.content()).hasSize(2)
                     .extracting("email", "role")
                     .containsExactly(
                             tuple("user@test.com", UserRole.USER),
                             tuple("admin@test.com", UserRole.ADMIN)
                     );
+            assertThat(result.totalElements()).isEqualTo(2);
         }
     }
 
@@ -102,16 +113,55 @@ class AdminUserServiceTest {
     class DeleteUser {
 
         @Test
-        @DisplayName("deletes a user")
+        @DisplayName("deletes another user")
         void deleteUser() {
             // given
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
-            adminUserService.deleteUser(1L);
+            adminUserService.deleteUser(AdminUserDeleteCommand.from(1L, requester(2L)));
 
             // then
             verify(userRepository).delete(user);
+        }
+
+        @Test
+        @DisplayName("deletes an admin when other admins remain")
+        void deleteAdminWhenOthersRemain() {
+            // given
+            given(userRepository.findById(2L)).willReturn(Optional.of(admin));
+            given(userRepository.countByRole(UserRole.ADMIN)).willReturn(2L);
+
+            // when
+            adminUserService.deleteUser(AdminUserDeleteCommand.from(2L, requester(3L)));
+
+            // then
+            verify(userRepository).delete(admin);
+        }
+
+        @Test
+        @DisplayName("throws ConflictException when deleting self")
+        void throwWhenDeletingSelf() {
+            // given
+            given(userRepository.findById(2L)).willReturn(Optional.of(admin));
+
+            // when & then
+            assertThatThrownBy(() -> adminUserService.deleteUser(AdminUserDeleteCommand.from(2L, requester(2L))))
+                    .isInstanceOf(ConflictException.class);
+            verify(userRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("throws ConflictException when deleting the last admin")
+        void throwWhenDeletingLastAdmin() {
+            // given
+            given(userRepository.findById(2L)).willReturn(Optional.of(admin));
+            given(userRepository.countByRole(UserRole.ADMIN)).willReturn(1L);
+
+            // when & then
+            assertThatThrownBy(() -> adminUserService.deleteUser(AdminUserDeleteCommand.from(2L, requester(3L))))
+                    .isInstanceOf(ConflictException.class);
+            verify(userRepository, never()).delete(any());
         }
 
         @Test
@@ -121,9 +171,12 @@ class AdminUserServiceTest {
             given(userRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> adminUserService.deleteUser(999L))
+            assertThatThrownBy(() -> adminUserService.deleteUser(AdminUserDeleteCommand.from(999L, requester(2L))))
                     .isInstanceOf(UserNotFoundException.class);
         }
     }
 
+    private LoginUser requester(Long id) {
+        return new LoginUser(id, "requester@test.com", "requester", "ADMIN");
+    }
 }
