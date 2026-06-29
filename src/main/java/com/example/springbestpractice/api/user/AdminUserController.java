@@ -4,6 +4,8 @@ import com.example.springbestpractice.application.user.AdminUserService;
 import com.example.springbestpractice.application.user.command.AdminUserDeleteCommand;
 import com.example.springbestpractice.application.user.dto.AdminUserPageRequest;
 import com.example.springbestpractice.application.user.dto.AdminUserResponse;
+import com.example.springbestpractice.application.user.dto.AdminUserSearchCondition;
+import com.example.springbestpractice.application.user.query.AdminUserSearchQuery;
 import com.example.springbestpractice.common.annotation.CurrentUser;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
@@ -26,8 +28,11 @@ public class AdminUserController {
     private final AdminUserService adminUserService;
 
     @GetMapping
-    public PageResponse<AdminUserResponse> getUsers(@Valid @ModelAttribute AdminUserPageRequest pageRequest) {
-        return adminUserService.getUsers(pageRequest);
+    public PageResponse<AdminUserResponse> getUsers(
+            @Valid @ModelAttribute AdminUserPageRequest pageRequest,
+            @Valid @ModelAttribute AdminUserSearchCondition condition
+    ) {
+        return adminUserService.getUsers(AdminUserSearchQuery.from(condition, pageRequest));
     }
 
     @GetMapping("/{id}")

@@ -1,8 +1,8 @@
 package com.example.springbestpractice.application.user;
 
 import com.example.springbestpractice.application.user.command.AdminUserDeleteCommand;
-import com.example.springbestpractice.application.user.dto.AdminUserPageRequest;
 import com.example.springbestpractice.application.user.dto.AdminUserResponse;
+import com.example.springbestpractice.application.user.query.AdminUserSearchQuery;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.exception.ConflictException;
 import com.example.springbestpractice.common.model.LoginUser;
@@ -11,8 +11,6 @@ import com.example.springbestpractice.domain.user.UserNotFoundException;
 import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.infrastructure.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminUserService {
 
-    private static final Sort DEFAULT_SORT = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
-
     private final UserRepository userRepository;
 
-    public PageResponse<AdminUserResponse> getUsers(AdminUserPageRequest request) {
-        PageRequest pageable = PageRequest.of(request.page(), request.size(), DEFAULT_SORT);
-        return PageResponse.from(userRepository.findAll(pageable).map(AdminUserResponse::from));
+    public PageResponse<AdminUserResponse> getUsers(AdminUserSearchQuery query) {
+        return PageResponse.from(
+                userRepository.search(query.keyword(), query.role(), query.pageable())
+                        .map(AdminUserResponse::from));
     }
 
     public AdminUserResponse getUser(Long id) {

@@ -2,8 +2,8 @@ package com.example.springbestpractice.api.user;
 
 import com.example.springbestpractice.application.user.AdminUserService;
 import com.example.springbestpractice.application.user.command.AdminUserDeleteCommand;
-import com.example.springbestpractice.application.user.dto.AdminUserPageRequest;
 import com.example.springbestpractice.application.user.dto.AdminUserResponse;
+import com.example.springbestpractice.application.user.query.AdminUserSearchQuery;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.exception.ConflictException;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
@@ -17,9 +17,11 @@ import com.example.springbestpractice.infrastructure.security.SecurityWebMvcConf
 import com.example.springbestpractice.support.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -63,7 +66,7 @@ class AdminUserControllerTest {
         // given
         PageResponse<AdminUserResponse> page =
                 new PageResponse<>(List.of(userResponse(), adminResponse()), 0, 20, 2, 1, true, true);
-        given(adminUserService.getUsers(any(AdminUserPageRequest.class))).willReturn(page);
+        given(adminUserService.getUsers(any(AdminUserSearchQuery.class))).willReturn(page);
 
         // when & then
         mockMvc.perform(get("/api/admin/users").with(user("admin").roles("ADMIN")))
@@ -75,10 +78,48 @@ class AdminUserControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/admin/users passes search condition and sort to the query")
+    void getUsersWithSearchCondition() throws Exception {
+        // given
+        PageResponse<AdminUserResponse> page =
+                new PageResponse<>(List.of(adminResponse()), 0, 20, 1, 1, true, true);
+        given(adminUserService.getUsers(any(AdminUserSearchQuery.class))).willReturn(page);
+
+        // when
+        mockMvc.perform(get("/api/admin/users")
+                        .param("keyword", " admin ")
+                        .param("role", "ADMIN")
+                        .param("sort", "OLDEST")
+                        .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk());
+
+        // then
+        ArgumentCaptor<AdminUserSearchQuery> captor = ArgumentCaptor.forClass(AdminUserSearchQuery.class);
+        verify(adminUserService).getUsers(captor.capture());
+
+        AdminUserSearchQuery query = captor.getValue();
+        Sort.Order createdAtOrder = query.pageable().getSort().getOrderFor("createdAt");
+        assertThat(query.keyword()).isEqualTo("admin");
+        assertThat(query.role()).isEqualTo(UserRole.ADMIN);
+        assertThat(createdAtOrder).isNotNull();
+        assertThat(createdAtOrder.getDirection()).isEqualTo(Sort.Direction.ASC);
+    }
+
+    @Test
     @DisplayName("GET /api/admin/users returns 400 when size exceeds the limit")
     void getUsersWithTooLargeSize() throws Exception {
         // when & then
         mockMvc.perform(get("/api/admin/users").param("size", "101").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(adminUserService);
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/users returns 400 when role is invalid")
+    void getUsersWithInvalidRole() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/admin/users").param("role", "INVALID").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(adminUserService);
