@@ -5,7 +5,8 @@ import jakarta.validation.constraints.Min;
 
 public record AdminUserPageRequest(
         @Min(0) @Max(1000) Integer page,
-        @Min(1) @Max(100) Integer size
+        @Min(1) @Max(100) Integer size,
+        AdminUserSort sort
 ) {
     public AdminUserPageRequest {
         if (page == null) {
@@ -13,6 +14,9 @@ public record AdminUserPageRequest(
         }
         if (size == null) {
             size = 20;
+        }
+        if (sort == null) {
+            sort = AdminUserSort.LATEST;
         }
     }
 }

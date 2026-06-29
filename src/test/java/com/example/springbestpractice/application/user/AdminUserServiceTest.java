@@ -1,8 +1,8 @@
 package com.example.springbestpractice.application.user;
 
 import com.example.springbestpractice.application.user.command.AdminUserDeleteCommand;
-import com.example.springbestpractice.application.user.dto.AdminUserPageRequest;
 import com.example.springbestpractice.application.user.dto.AdminUserResponse;
+import com.example.springbestpractice.application.user.query.AdminUserSearchQuery;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.exception.ConflictException;
 import com.example.springbestpractice.common.model.LoginUser;
@@ -20,7 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -57,14 +57,15 @@ class AdminUserServiceTest {
     class GetUsers {
 
         @Test
-        @DisplayName("returns a page of users")
+        @DisplayName("returns a page of users from the search query")
         void returnUserPage() {
             // given
-            given(userRepository.findAll(any(Pageable.class)))
+            given(userRepository.search(any(), any(), any()))
                     .willReturn(new PageImpl<>(List.of(user, admin)));
 
             // when
-            PageResponse<AdminUserResponse> result = adminUserService.getUsers(new AdminUserPageRequest(0, 20));
+            PageResponse<AdminUserResponse> result = adminUserService.getUsers(
+                    new AdminUserSearchQuery(null, null, PageRequest.of(0, 20)));
 
             // then
             assertThat(result.content()).hasSize(2)
