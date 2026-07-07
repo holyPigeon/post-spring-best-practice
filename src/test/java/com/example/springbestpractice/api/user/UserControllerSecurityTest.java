@@ -4,6 +4,7 @@ import com.example.springbestpractice.application.user.UserService;
 import com.example.springbestpractice.application.user.dto.UserResponse;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.user.User;
+import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetailsService;
 import com.example.springbestpractice.infrastructure.security.CurrentUserArgumentResolver;
@@ -48,7 +49,7 @@ class UserControllerSecurityTest {
     void allowRegularUser() throws Exception {
         // given
         User user = UserFixture.userWithId(1L, "user@test.com", "user", "password");
-        given(userService.getMyProfile(new LoginUser(1L, "user@test.com", "user")))
+        given(userService.getMyProfile(new LoginUser(1L, "user@test.com", "user", UserRole.USER)))
                 .willReturn(new UserResponse(1L, "user@test.com", "user", null, null));
 
         // when & then
@@ -61,7 +62,7 @@ class UserControllerSecurityTest {
     void allowAdminUser() throws Exception {
         // given
         User admin = UserFixture.adminWithId(2L);
-        given(userService.getMyProfile(new LoginUser(2L, "admin@test.com", "admin")))
+        given(userService.getMyProfile(new LoginUser(2L, "admin@test.com", "admin", UserRole.ADMIN)))
                 .willReturn(new UserResponse(2L, "admin@test.com", "admin", null, null));
 
         // when & then

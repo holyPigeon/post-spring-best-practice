@@ -10,6 +10,7 @@ import com.example.springbestpractice.application.user.dto.UserResponse;
 import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.common.model.LoginUser;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
+import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.infrastructure.security.CustomUserDetails;
 import com.example.springbestpractice.infrastructure.security.CurrentUserArgumentResolver;
 import com.example.springbestpractice.infrastructure.security.SecurityWebMvcConfig;
@@ -181,6 +182,6 @@ class UserControllerTest {
     }
 
     private LoginUser loginUser() {
-        return new LoginUser(1L, "test@test.com", "tester");
+        return new LoginUser(1L, "test@test.com", "tester", UserRole.USER);
     }
 }

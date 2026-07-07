@@ -9,6 +9,7 @@ import com.example.springbestpractice.application.post.dto.PostResponse;
 import com.example.springbestpractice.application.post.dto.PostUpdateRequest;
 import com.example.springbestpractice.common.dto.PageResponse;
 import com.example.springbestpractice.common.model.LoginUser;
+import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.comment.CommentRepository;
@@ -60,7 +61,7 @@ class PostServiceTest {
     @BeforeEach
     void setUp() {
         post = PostFixture.postWithId(1L);
-        loginUser = new LoginUser(1L, "writer@test.com", "작성자");
+        loginUser = new LoginUser(1L, "writer@test.com", "작성자", UserRole.USER);
     }
 
     @Test
@@ -159,7 +160,7 @@ class PostServiceTest {
         void throwExceptionWhenNotOwner() {
             // given
             PostUpdateRequest request = new PostUpdateRequest("새 제목", "새 내용");
-            LoginUser otherUser = new LoginUser(2L, "other@test.com", "다른사용자");
+            LoginUser otherUser = new LoginUser(2L, "other@test.com", "다른사용자", UserRole.USER);
             given(postRepository.findById(1L)).willReturn(Optional.of(post));
 
             // when & then
