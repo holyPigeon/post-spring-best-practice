@@ -1,9 +1,9 @@
 package com.example.springbestpractice.application.auth.dto;
 
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.common.model.Role;
+import com.example.springbestpractice.domain.user.UserRole;
 
-public record CurrentUserResponse(Long id, String email, String nickname, Role role) {
+public record CurrentUserResponse(Long id, String email, String nickname, UserRole role) {
 
     public static CurrentUserResponse from(LoginUser loginUser) {
         return new CurrentUserResponse(

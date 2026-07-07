@@ -1,9 +1,7 @@
 package com.example.springbestpractice.infrastructure.security;
 
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.common.model.Role;
 import com.example.springbestpractice.domain.user.User;
-import com.example.springbestpractice.domain.user.UserRole;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,14 +19,7 @@ public class CustomUserDetails implements UserDetails {
     }
 
     public LoginUser toLoginUser() {
-        return new LoginUser(user.getId(), user.getEmail(), user.getNickname(), toRole(user.getRole()));
-    }
-
-    private static Role toRole(UserRole role) {
-        return switch (role) {
-            case USER -> Role.USER;
-            case ADMIN -> Role.ADMIN;
-        };
+        return new LoginUser(user.getId(), user.getEmail(), user.getNickname(), user.getRole());
     }
 
     @Override

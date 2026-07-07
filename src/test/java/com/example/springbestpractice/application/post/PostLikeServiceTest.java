@@ -4,7 +4,7 @@ import com.example.springbestpractice.application.post.command.PostLikeCreateCom
 import com.example.springbestpractice.application.post.command.PostLikeDeleteCommand;
 import com.example.springbestpractice.application.post.dto.PostLikeResponse;
 import com.example.springbestpractice.common.model.LoginUser;
-import com.example.springbestpractice.common.model.Role;
+import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.domain.post.Post;
 import com.example.springbestpractice.domain.post.PostLike;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
@@ -49,7 +49,7 @@ class PostLikeServiceTest {
     @BeforeEach
     void setUp() {
         post = PostFixture.postWithId(1L);
-        loginUser = new LoginUser(2L, "user@test.com", "user", Role.USER);
+        loginUser = new LoginUser(2L, "user@test.com", "user", UserRole.USER);
     }
 
     @Nested
