@@ -8,8 +8,8 @@ import com.example.springbestpractice.application.user.dto.UserPasswordUpdateReq
 import com.example.springbestpractice.application.user.dto.UserResponse;
 import com.example.springbestpractice.application.user.dto.UserUpdateRequest;
 import com.example.springbestpractice.common.model.LoginUser;
+import com.example.springbestpractice.common.model.Role;
 import com.example.springbestpractice.domain.user.DuplicateEmailException;
-import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.domain.user.User;
 import com.example.springbestpractice.domain.user.UserNotFoundException;
 import com.example.springbestpractice.infrastructure.user.UserRepository;
@@ -260,6 +260,6 @@ class UserServiceTest {
     }
 
     private LoginUser loginUser(Long id) {
-        return new LoginUser(id, "test@test.com", "tester", UserRole.USER);
+        return new LoginUser(id, "test@test.com", "tester", Role.USER);
     }
 }
