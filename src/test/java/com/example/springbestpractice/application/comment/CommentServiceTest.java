@@ -7,6 +7,7 @@ import com.example.springbestpractice.application.comment.dto.CommentCreateReque
 import com.example.springbestpractice.application.comment.dto.CommentResponse;
 import com.example.springbestpractice.application.comment.dto.CommentUpdateRequest;
 import com.example.springbestpractice.common.model.LoginUser;
+import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.domain.comment.Comment;
 import com.example.springbestpractice.domain.comment.CommentNotFoundException;
 import com.example.springbestpractice.domain.post.Post;
@@ -55,7 +56,7 @@ class CommentServiceTest {
     void setUp() {
         post = PostFixture.postWithId(1L);
         comment = CommentFixture.commentWithId(1L, post);
-        loginUser = new LoginUser(2L, "commenter@test.com", "댓글 작성자", "USER");
+        loginUser = new LoginUser(2L, "commenter@test.com", "댓글 작성자", UserRole.USER);
     }
 
     @Nested
@@ -165,7 +166,7 @@ class CommentServiceTest {
         void throwExceptionWhenNotOwner() {
             // given
             CommentUpdateRequest request = new CommentUpdateRequest("새 댓글 내용");
-            LoginUser otherUser = new LoginUser(1L, "writer@test.com", "작성자", "USER");
+            LoginUser otherUser = new LoginUser(1L, "writer@test.com", "작성자", UserRole.USER);
             given(postRepository.existsById(1L)).willReturn(true);
             given(commentRepository.findByIdAndPostId(1L, 1L)).willReturn(Optional.of(comment));
 
