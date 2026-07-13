@@ -83,6 +83,8 @@ com.example.springbestpractice/
 
 Dependency direction: `api -> application -> domain`, `infrastructure -> domain`, all layers may depend on `common`. Reverse dependencies are forbidden.
 
+Narrow exception: a `common` type may reference a pure `domain` leaf value type (a dependency-free enum or value object, e.g. `common.model.LoginUser` referencing `domain.user.UserRole`) to keep a single source of truth instead of duplicating the value. This is allowed only for stable leaf values with no behavior; do not let `common` reach into services, repositories, or entities. Re-evaluate if `common` is ever extracted into a standalone Gradle module.
+
 ### Architecture Tiebreaker
 
 Prefer the current layer-first monolith. Do not introduce hexagonal architecture or port/adapter packages as incidental cleanup.

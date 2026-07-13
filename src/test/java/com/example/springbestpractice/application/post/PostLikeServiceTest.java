@@ -4,6 +4,7 @@ import com.example.springbestpractice.application.post.command.PostLikeCreateCom
 import com.example.springbestpractice.application.post.command.PostLikeDeleteCommand;
 import com.example.springbestpractice.application.post.dto.PostLikeResponse;
 import com.example.springbestpractice.common.model.LoginUser;
+import com.example.springbestpractice.domain.user.UserRole;
 import com.example.springbestpractice.domain.post.PostNotFoundException;
 import com.example.springbestpractice.infrastructure.post.PostLikeRedisRepository;
 import com.example.springbestpractice.infrastructure.post.PostLikeRepository;
@@ -44,7 +45,7 @@ class PostLikeServiceTest {
 
     @BeforeEach
     void setUp() {
-        loginUser = new LoginUser(2L, "user@test.com", "user", "USER");
+        loginUser = new LoginUser(2L, "user@test.com", "user", UserRole.USER);
     }
 
     @Nested
